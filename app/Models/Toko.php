@@ -4,34 +4,37 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
 class Toko extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
-    protected $fillable = ['uuid', 'id_penjual', 'nama_toko', 'deskripsi', 'kontak'];
+    protected $table = 'tokos';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($toko) {
-            $toko->uuid = (string) Str::uuid();
-        });
-    }
+    protected $fillable = [
+        'penjual_id',
+        'nama_toko',
+        'alamat_toko',
+        'deskripsi',
+        'foto_profil',
+        'instagram',
+        'facebook',
+        'whatsapp',
+    ];
 
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    // 🔹 Relasi ke Penjual (setiap toko dimiliki satu penjual)
     public function penjual()
     {
-        return $this->belongsTo(Penjual::class, 'id_penjual');
+        return $this->belongsTo(Penjual::class, 'penjual_id');
     }
 
-    public function files()
-    {
-        return $this->morphOne(File::class, 'fileable');
-    }
-
+    // 🔹 Relasi ke Produk (satu toko punya banyak produk)
     public function produks()
     {
-        return $this->hasMany(Produk::class, 'id_toko');
+        return $this->hasMany(Produk::class, 'toko_id', 'id');
     }
 }

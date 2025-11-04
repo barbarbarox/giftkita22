@@ -4,24 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
-class FAQ extends Model
+class Faq extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
-    protected $fillable = ['uuid', 'pertanyaan', 'jawaban'];
+    protected $table = 'faqs';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($faq) {
-            $faq->uuid = (string) Str::uuid();
-        });
-    }
-
-    public function files()
-    {
-        return $this->morphMany(File::class, 'fileable');
-    }
+    protected $fillable = [
+        'pertanyaan',
+        'jawaban',
+    ];
 }

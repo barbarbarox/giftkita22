@@ -4,22 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
 class Admin extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasUuid;
 
-    protected $fillable = ['uuid', 'nama', 'username', 'password'];
+    protected $table = 'admins';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($admin) {
-            $admin->uuid = (string) Str::uuid();
-        });
-    }
+    protected $fillable = [
+        'username',
+        'email',
+        'password',
+    ];
 
     protected $hidden = ['password'];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
+
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
+    }
 }

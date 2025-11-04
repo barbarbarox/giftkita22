@@ -4,27 +4,43 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
 class Penjual extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasUuid;
 
-    protected $fillable = ['uuid', 'nama', 'username', 'password', 'status_verifikasi'];
+    protected $table = 'penjuals';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($penjual) {
-            $penjual->uuid = (string) Str::uuid();
-        });
-    }
+    /**
+     * Karena memakai UUID sebagai primary key,
+     * kita pastikan Laravel tahu bahwa ID-nya bukan auto-increment.
+     */
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'username',
+        'email',
+        'password',
+        'no_hp',
+    ];
 
     protected $hidden = ['password'];
 
-    public function toko()
+    /**
+     * Relasi: satu penjual memiliki banyak toko.
+     */
+    public function tokos()
     {
-        return $this->hasOne(Toko::class, 'id_penjual');
+        return $this->hasMany(Toko::class, 'penjual_id');
+    }
+
+    /**
+     * Relasi: jika penjual punya file (foto profil, dll)
+     */
+    public function files()
+    {
+        return $this->morphMany(File::class, 'fileable');
     }
 }

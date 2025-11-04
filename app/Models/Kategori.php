@@ -4,24 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
+use App\Traits\HasUuid;
 
 class Kategori extends Model
 {
-    use HasFactory;
+    use HasFactory, HasUuid;
 
-    protected $fillable = ['uuid', 'nama_kategori'];
+    protected $table = 'kategoris';
 
-    protected static function boot()
-    {
-        parent::boot();
-        static::creating(function ($kategori) {
-            $kategori->uuid = (string) Str::uuid();
-        });
-    }
+    // Karena pakai UUID sebagai primary key
+    public $incrementing = false;
+    protected $keyType = 'string';
 
+    protected $fillable = [
+        'nama_kategori',
+        'deskripsi',
+    ];
+
+    /**
+     * Relasi ke produk (1 kategori punya banyak produk)
+     */
     public function produks()
     {
-        return $this->hasMany(Produk::class, 'id_kategori');
+        return $this->hasMany(Produk::class, 'kategori_id', 'id');
     }
 }
