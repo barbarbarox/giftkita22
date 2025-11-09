@@ -17,12 +17,8 @@
                     @endforeach
 
                     {{-- Tombol geser kiri/kanan --}}
-                    <button id="prevBtn" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2">
-                        ❮
-                    </button>
-                    <button id="nextBtn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2">
-                        ❯
-                    </button>
+                    <button id="prevBtn" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2">❮</button>
+                    <button id="nextBtn" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-2">❯</button>
                 </div>
 
                 {{-- Indikator posisi foto --}}
@@ -63,7 +59,7 @@
 
                 <a href="{{ route('katalog.index') }}" 
                    class="px-5 sm:px-8 py-2 sm:py-3 rounded-xl border border-gray-300 hover:bg-gray-100 transition">
-                    Kembali
+                    Kembali ke Katalog
                 </a>
             </div>
         </div>
@@ -75,8 +71,11 @@
     <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-2xl relative transform scale-95 transition-transform">
         <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">🧾 Detail Pesanan</h2>
 
-        <form id="pesanForm" method="POST" action="{{ route('pesanan.store', $produk->id) }}">
+        <form id="pesanForm" method="POST" action="{{ route('pesanan.store') }}">
             @csrf
+            {{-- Tambahkan produk_id agar controller tahu produk mana --}}
+            <input type="hidden" name="produk_id" value="{{ $produk->id }}">
+
             <div class="space-y-3">
                 <div>
                     <label class="block text-gray-600">Nama Lengkap</label>
@@ -92,7 +91,7 @@
                 </div>
                 <div>
                     <label class="block text-gray-600">Alamat Lengkap</label>
-                    <textarea name="alamat_pembeli" rows="2" class="w-full rounded-lg border-gray-300 focus:ring-[#007daf]"></textarea>
+                    <textarea name="alamat_pembeli" rows="2" class="w-full rounded-lg border-gray-300 focus:ring-[#007daf]" required></textarea>
                 </div>
                 <div>
                     <label class="block text-gray-600">Jumlah</label>
@@ -130,6 +129,7 @@
 {{-- SCRIPT --}}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    // ==== SLIDER PRODUK ====
     const imgs = document.querySelectorAll('.carousel-img');
     if (imgs.length > 0) {
         const dots = document.querySelectorAll('.dot');
@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imgs.forEach((img, i) => {
                 img.classList.toggle('opacity-100', i === index);
                 img.classList.toggle('opacity-0', i !== index);
-                if(dots[i]) {
+                if (dots[i]) {
                     dots[i].classList.toggle('bg-[#007daf]', i === index);
                     dots[i].classList.toggle('bg-gray-300', i !== index);
                 }
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
     }
 
-    // Modal Pesanan
+    // ==== MODAL PESANAN ====
     const pesanModal = document.getElementById('pesanModal');
     const pesanBtn = document.getElementById('openPesanModal');
     const batalPesan = document.getElementById('batalPesan');
@@ -177,29 +177,34 @@ document.addEventListener('DOMContentLoaded', () => {
         pesanModal.classList.add('hidden');
     });
 
+    // ==== SUBMIT PESANAN ====
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const formData = new FormData(form);
 
-        const response = await fetch(form.action, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}'
-            },
-            body: formData
-        });
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: formData
+            });
 
-        if (response.ok) {
-            pesanModal.classList.add('hidden');
-            successPopup.classList.remove('hidden');
-        } else {
-            alert('Terjadi kesalahan, coba lagi.');
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                pesanModal.classList.add('hidden');
+                successPopup.classList.remove('hidden');
+                form.reset();
+            } else {
+                alert(data.message || 'Terjadi kesalahan, coba lagi.');
+            }
+        } catch (error) {
+            alert('Koneksi gagal. Pastikan server berjalan.');
         }
     });
 
     okPopup.addEventListener('click', () => {
         successPopup.classList.add('hidden');
-        form.reset();
     });
 });
 </script>

@@ -47,7 +47,7 @@
             <a href="{{ route('penjual.toko.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Profil Toko</a>
             <a href="{{ route('penjual.produk.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Produk</a>
             <a href="{{ route('penjual.pesanan.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Pesanan</a>
-            <a href="{{ route('penjual.bantuan') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Bantuan</a>
+            <a href="{{ route('penjual.bantuan') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Bantuan & Faq</a>
         </nav>
 
         {{-- Tombol Logout lebih menonjol --}}

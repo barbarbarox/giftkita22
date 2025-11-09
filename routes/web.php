@@ -5,6 +5,7 @@ use App\Http\Controllers\LandingController;
 use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\TokoPublikController;
 use App\Http\Controllers\PesananPublikController;
+use App\Http\Controllers\FaqController;
 
 // Controllers Penjual
 use App\Http\Controllers\Penjual\DashboardController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Penjual\TokoController;
 use App\Http\Controllers\Penjual\ProdukController;
 use App\Http\Controllers\Penjual\PesananController;
 use App\Http\Controllers\Auth\PenjualAuthController;
+use App\Http\Controllers\Penjual\BantuanController;
 
 // Controllers Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -26,46 +28,28 @@ use App\Http\Controllers\Admin\AdminFaqController;
 | ROUTE ADMIN
 |--------------------------------------------------------------------------
 */
-Route::prefix('admin')->group(function () {
+Route::prefix('admin')->name('admin.')->group(function () {
 
-    // 🔐 Login Admin (disamarkan)
-    Route::get('/olgin', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/olgin', [AdminAuthController::class, 'login'])->name('admin.login.post');
+    // 🔐 Login & Logout admin (tanpa middleware auth)
+    Route::get('/olgin', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/olgin', [AdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
 
-    // 🔒 Hanya untuk admin yang login
+    // 🔒 Hanya untuk admin yang sudah login
     Route::middleware('auth:admin')->group(function () {
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // 👤 CRUD Penjual
-        Route::resource('/penjual', AdminPenjualController::class)->except(['show'])->names([
-            'index' => 'admin.penjual.index',
-            'create' => 'admin.penjual.create',
-            'store' => 'admin.penjual.store',
-            'edit' => 'admin.penjual.edit',
-            'update' => 'admin.penjual.update',
-            'destroy' => 'admin.penjual.destroy',
-        ]);
+        Route::resource('/penjual', AdminPenjualController::class)->except(['show'])->names('penjual');
 
         // 🏷️ CRUD Kategori
-        Route::resource('/kategori', AdminKategoriController::class)->except(['show'])->names([
-            'index' => 'admin.kategori.index',
-            'create' => 'admin.kategori.create',
-            'store' => 'admin.kategori.store',
-            'edit' => 'admin.kategori.edit',
-            'update' => 'admin.kategori.update',
-            'destroy' => 'admin.kategori.destroy',
-        ]);
+        Route::resource('/kategori', AdminKategoriController::class)->except(['show'])->names('kategori');
 
-        // 📚 CRUD FAQ
-        Route::resource('/faq', AdminFaqController::class)->except(['show'])->names([
-            'index' => 'admin.faq.index',
-            'create' => 'admin.faq.create',
-            'store' => 'admin.faq.store',
-            'edit' => 'admin.faq.edit',
-            'update' => 'admin.faq.update',
-            'destroy' => 'admin.faq.destroy',
-        ]);
+        // 📚 CRUD FAQ (gunakan UUID)
+        Route::resource('/faq', AdminFaqController::class)
+            ->except(['show'])
+            ->names('faq')
+            ->whereUuid('faq'); // ✅ penting agar route binding UUID berfungsi
     });
 });
 
@@ -82,7 +66,8 @@ Route::get('/', [LandingController::class, 'index'])->name('home');
 Route::get('/katalog', [KatalogController::class, 'index'])->name('katalog.index');
 Route::get('/katalog/{id}', [KatalogController::class, 'show'])->name('katalog.show');
 Route::get('/produk/{produk}', [KatalogController::class, 'show'])->name('produk.show');
-// 📦 Pesanan Publik (pembeli)
+
+// 📦 Pesanan Publik
 Route::post('/pesanan', [PesananPublikController::class, 'store'])->name('pesanan.store');
 
 // 🏪 Toko Publik
@@ -93,6 +78,7 @@ Route::get('/toko/{uuid}', [TokoPublikController::class, 'show'])->name('toko.sh
 Route::get('/penjual/login', [PenjualAuthController::class, 'showLoginForm'])->name('penjual.login');
 Route::post('/penjual/login', [PenjualAuthController::class, 'login'])->name('penjual.login.post');
 Route::post('/penjual/logout', [PenjualAuthController::class, 'logout'])->name('penjual.logout');
+Route::get('/faq', [FaqController::class, 'index'])->name('faq.index');
 
 // 🚪 Logout Umum
 Route::get('/logout', fn() => redirect('/')->with('status', 'Anda telah logout.'))->name('logout');
@@ -112,26 +98,16 @@ Route::prefix('penjual')->name('penjual.')->middleware('auth:penjual')->group(fu
     Route::put('/profil/update', [ProfilController::class, 'update'])->name('profil.update');
 
     // 🏪 CRUD Toko
-    Route::get('/toko', [TokoController::class, 'index'])->name('toko.index');
-    Route::get('/toko/create', [TokoController::class, 'create'])->name('toko.create');
-    Route::post('/toko', [TokoController::class, 'store'])->name('toko.store');
-    Route::get('/toko/{uuid}/edit', [TokoController::class, 'edit'])->name('toko.edit');
-    Route::put('/toko/{uuid}', [TokoController::class, 'update'])->name('toko.update');
-    Route::delete('/toko/{uuid}', [TokoController::class, 'destroy'])->name('toko.destroy');
+    Route::resource('/toko', TokoController::class)->except(['show'])->names('toko');
 
     // 🧺 CRUD Produk
-    Route::get('/produk', [ProdukController::class, 'index'])->name('produk.index');
-    Route::get('/produk/create', [ProdukController::class, 'create'])->name('produk.create');
-    Route::post('/produk', [ProdukController::class, 'store'])->name('produk.store');
-    Route::get('/produk/{produk}/edit', [ProdukController::class, 'edit'])->name('produk.edit');
-    Route::put('/produk/{produk}', [ProdukController::class, 'update'])->name('produk.update');
-    Route::delete('/produk/{produk}', [ProdukController::class, 'destroy'])->name('produk.destroy');
+    Route::resource('/produk', ProdukController::class)->except(['show'])->names('produk');
     Route::delete('/produk/foto/{id}', [ProdukController::class, 'hapusFoto'])->name('produk.foto.destroy');
 
-    // 📦 Pesanan (FIXED)
+    // 📦 Pesanan   
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
     Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
 
     // 🆘 Bantuan
-    Route::view('/bantuan', 'penjual.bantuan')->name('bantuan');
+    Route::get('/bantuan', [BantuanController::class, 'index'])->name('bantuan');
 });

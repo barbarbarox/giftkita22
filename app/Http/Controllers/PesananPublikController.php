@@ -6,13 +6,17 @@ use Illuminate\Http\Request;
 use App\Models\Pesanan;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class PesananPublikController extends Controller
 {
+    /**
+     * Simpan pesanan dari pembeli publik (tanpa login)
+     */
     public function store(Request $request)
     {
         try {
-            // ✅ Validasi input
+            // ✅ 1. Validasi input dari form
             $validated = $request->validate([
                 'produk_id' => 'required|exists:produks,id',
                 'nama_pembeli' => 'required|string|max:255',
@@ -22,9 +26,9 @@ class PesananPublikController extends Controller
                 'jumlah' => 'required|integer|min:1',
             ]);
 
-            // ✅ Simpan pesanan ke database dengan UUID
+            // ✅ 2. Simpan ke database
             Pesanan::create([
-                'id' => (string) Str::uuid(),
+                'id' => (string) Str::uuid(), // gunakan UUID sebagai id
                 'produk_id' => $validated['produk_id'],
                 'nama_pembeli' => $validated['nama_pembeli'],
                 'email_pembeli' => $validated['email_pembeli'] ?? null,
@@ -35,17 +39,28 @@ class PesananPublikController extends Controller
                 'status' => 'pending',
             ]);
 
-            // ✅ Response sukses ke frontend
+            // ✅ 3. Kembalikan respon sukses ke frontend
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim!',
             ], 200);
 
-        } catch (\Exception $e) {
-            // ❌ Tangani error
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // ⚠️ 4a. Error validasi
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan pesanan: ' . $e->getMessage(),
+                'message' => 'Validasi gagal.',
+                'errors' => $e->errors(),
+            ], 422);
+
+        } catch (\Exception $e) {
+            // ⚠️ 4b. Error umum (misal kolom tidak ada, DB gagal, dll)
+            Log::error('Gagal menyimpan pesanan: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan pesanan.',
+                'error_detail' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
     }

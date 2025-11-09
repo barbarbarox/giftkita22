@@ -1,6 +1,11 @@
-@extends('layouts.penjual')
+@php
+    // Deteksi apakah pengguna saat ini login sebagai penjual
+    $isPenjual = Auth::guard('penjual')->check();
+@endphp
 
-@section('title', 'Bantuan & FAQ Penjual | GiftKita')
+@extends('layouts.app')
+
+@section('title', 'FAQ | GiftKita')
 
 @section('content')
 <div class="min-h-screen bg-gradient-to-br from-[#007daf] via-[#c771d4] to-[#ffb829] py-12 px-4">
@@ -8,28 +13,31 @@
         {{-- Header --}}
         <div class="text-center mb-10">
             <h1 class="text-4xl font-extrabold text-white drop-shadow-md animate-fade-down">
-                Bantuan & FAQ Penjual
+                Pertanyaan yang Sering Diajukan (FAQ)
             </h1>
             <p class="text-white/90 mt-3 text-lg animate-fade-up">
-                Temukan panduan dan jawaban atas pertanyaan umum untuk penjual di GiftKita
+                Temukan jawaban atas pertanyaan umum seputar GiftKita
             </p>
         </div>
 
         {{-- Form Pencarian --}}
-        <form method="GET" action="{{ route('penjual.bantuan') }}" class="flex flex-col md:flex-row gap-3 justify-center mb-8">
+        <form method="GET" action="{{ route('faq.index') }}" class="flex flex-col md:flex-row gap-3 justify-center mb-8">
             <input
                 type="text"
                 name="q"
-                value="{{ request('q') }}"
-                placeholder="Cari pertanyaan atau panduan..."
+                value="{{ $search }}"
+                placeholder="Cari pertanyaan..."
                 class="w-full md:w-2/3 px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#007daf] focus:outline-none shadow-sm"
             >
-            <button
-                type="submit"
-                class="bg-white text-[#007daf] font-semibold px-6 py-3 rounded-xl shadow hover:bg-gray-100 transition duration-200"
+            <select
+                name="role"
+                onchange="this.form.submit()"
+                class="px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#c771d4] focus:outline-none shadow-sm"
             >
-                <i class='bx bx-search'></i> Cari
-            </button>
+                <option value="">Semua Kategori</option>
+                <option value="pembeli" {{ $role === 'pembeli' ? 'selected' : '' }}>Pembeli</option>
+                <option value="penjual" {{ $role === 'penjual' ? 'selected' : '' }}>Penjual</option>
+            </select>
         </form>
 
         {{-- Daftar FAQ --}}
@@ -49,13 +57,13 @@
                         {!! nl2br(e($faq->jawaban)) !!}
                         @if($faq->role !== 'semua')
                             <div class="mt-3 text-sm text-gray-400 italic">
-                                <i class='bx bx-user'></i> Khusus untuk: {{ ucfirst($faq->role) }}
+                                <i class='bx bx-user'></i> FAQ untuk: {{ ucfirst($faq->role) }}
                             </div>
                         @endif
                     </div>
                 </div>
             @empty
-                <p class="text-center text-white/90 text-lg">Belum ada panduan atau FAQ yang tersedia untuk penjual.</p>
+                <p class="text-center text-white/90 text-lg">Belum ada FAQ yang tersedia.</p>
             @endforelse
         </div>
     </div>

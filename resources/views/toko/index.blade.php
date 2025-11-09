@@ -13,7 +13,16 @@
             @foreach ($tokos as $toko)
                 <div class="bg-white border rounded-xl shadow-md hover:shadow-xl transition overflow-hidden">
                     @php
-                        $foto = $toko->foto ? asset('storage/' . $toko->foto) : asset('images/no-image.jpg');
+                        // Cek apakah path sudah termasuk 'storage/'
+                        $fotoPath = $toko->foto_profil;
+
+                        if ($fotoPath && str_starts_with($fotoPath, 'storage/')) {
+                            $foto = asset($fotoPath);
+                        } elseif ($fotoPath) {
+                            $foto = asset('storage/' . $fotoPath);
+                        } else {
+                            $foto = asset('images/no-image.jpg');
+                        }
                     @endphp
 
                     <a href="{{ route('toko.show', $toko->id) }}">
@@ -21,7 +30,7 @@
                         <div class="p-4">
                             <h3 class="text-lg font-bold text-[#007daf] mb-1">{{ $toko->nama_toko }}</h3>
                             <p class="text-sm text-gray-600 line-clamp-2">{{ $toko->deskripsi ?? 'Tidak ada deskripsi' }}</p>
-                            <p class="mt-2 text-xs text-gray-500">🛍️ {{ $toko->produks_count }} Produk</p>
+                            <p class="mt-2 text-xs text-gray-500">🛍️ {{ $toko->produks_count ?? 0 }} Produk</p>
                         </div>
                     </a>
                 </div>

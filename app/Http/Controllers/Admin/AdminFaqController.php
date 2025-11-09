@@ -33,45 +33,52 @@ class AdminFaqController extends Controller
         $validated = $request->validate([
             'pertanyaan' => 'required|string|max:255',
             'jawaban'    => 'required|string',
+            'role'       => 'required|in:pembeli,penjual,semua',
         ]);
 
         Faq::create($validated);
 
-        return redirect()->route('admin.faq.index')->with('success', 'FAQ berhasil ditambahkan!');
+        return redirect()->route('admin.faq.index')
+            ->with('success', 'FAQ berhasil ditambahkan!');
     }
 
     /**
      * Form edit FAQ
      */
-    public function edit($id)
+    public function edit($uuid)
     {
-        $faq = Faq::findOrFail($id);
+        $faq = Faq::where('id', $uuid)->firstOrFail();
         return view('admin.faq.edit', compact('faq'));
     }
 
     /**
      * Update FAQ
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, $uuid)
     {
-        $faq = Faq::findOrFail($id);
+        $faq = Faq::where('id', $uuid)->firstOrFail();
 
         $validated = $request->validate([
             'pertanyaan' => 'required|string|max:255',
             'jawaban'    => 'required|string',
+            'role'       => 'required|in:pembeli,penjual,semua',
         ]);
 
         $faq->update($validated);
 
-        return redirect()->route('admin.faq.index')->with('success', 'FAQ berhasil diperbarui!');
+        return redirect()->route('admin.faq.index')
+            ->with('success', 'FAQ berhasil diperbarui!');
     }
 
     /**
      * Hapus FAQ
      */
-    public function destroy($id)
+    public function destroy($uuid)
     {
-        Faq::destroy($id);
-        return redirect()->route('admin.faq.index')->with('success', 'FAQ berhasil dihapus!');
+        $faq = Faq::where('id', $uuid)->firstOrFail();
+        $faq->delete();
+
+        return redirect()->route('admin.faq.index')
+            ->with('success', 'FAQ berhasil dihapus!');
     }
 }

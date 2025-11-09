@@ -2,42 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Faq;
 use Illuminate\Http\Request;
+use App\Models\Faq;
 
 class FaqController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json(Faq::all());
-    }
+        $search = $request->input('q');
+        $role = $request->input('role');
 
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'pertanyaan' => 'required',
-            'jawaban' => 'required',
-        ]);
+        $faqs = Faq::query()
+            ->when($role && $role !== 'semua', fn($q) => $q->where('role', $role))
+            ->when($search, fn($q) => $q->where('pertanyaan', 'like', "%{$search}%")
+                                        ->orWhere('jawaban', 'like', "%{$search}%"))
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        $faq = Faq::create($validated);
-        return response()->json($faq, 201);
-    }
-
-    public function show($id)
-    {
-        return response()->json(Faq::findOrFail($id));
-    }
-
-    public function update(Request $request, $id)
-    {
-        $faq = Faq::findOrFail($id);
-        $faq->update($request->only(['pertanyaan', 'jawaban']));
-        return response()->json($faq);
-    }
-
-    public function destroy($id)
-    {
-        Faq::destroy($id);
-        return response()->json(['message' => 'FAQ deleted successfully']);
+        return view('faq.index', compact('faqs', 'search', 'role'));
     }
 }

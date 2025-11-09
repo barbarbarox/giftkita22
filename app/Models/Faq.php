@@ -15,5 +15,8 @@ class Faq extends Model
     protected $fillable = [
         'pertanyaan',
         'jawaban',
+        'role',
     ];
+    public $incrementing = false;
+    protected $keyType = 'string';
 }
