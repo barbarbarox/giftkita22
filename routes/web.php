@@ -78,6 +78,8 @@ Route::get('/toko/{uuid}', [TokoPublikController::class, 'show'])->name('toko.sh
 Route::get('/penjual/login', [PenjualAuthController::class, 'showLoginForm'])->name('penjual.login');
 Route::post('/penjual/login', [PenjualAuthController::class, 'login'])->name('penjual.login.post');
 Route::post('/penjual/logout', [PenjualAuthController::class, 'logout'])->name('penjual.logout');
+
+// ❓ FAQ
 Route::get('/faq', [FaqController::class, 'index'])->name('faq.index');
 
 // 🚪 Logout Umum
@@ -104,10 +106,22 @@ Route::prefix('penjual')->name('penjual.')->middleware('auth:penjual')->group(fu
     Route::resource('/produk', ProdukController::class)->except(['show'])->names('produk');
     Route::delete('/produk/foto/{id}', [ProdukController::class, 'hapusFoto'])->name('produk.foto.destroy');
 
-    // 📦 Pesanan   
+    // 📦 Pesanan
     Route::get('/pesanan', [PesananController::class, 'index'])->name('pesanan.index');
     Route::put('/pesanan/{id}/status', [PesananController::class, 'updateStatus'])->name('pesanan.updateStatus');
 
     // 🆘 Bantuan
     Route::get('/bantuan', [BantuanController::class, 'index'])->name('bantuan');
 });
+
+/*
+|--------------------------------------------------------------------------
+| ROUTE HALAMAN INFORMASI
+|--------------------------------------------------------------------------
+*/
+
+// 📄 Halaman Informasi
+Route::view('/kebijakan-privasi', 'pages.kebijakan-privasi')->name('kebijakan-privasi');
+Route::view('/kebijakan-layanan', 'pages.kebijakan-layanan')->name('kebijakan-layanan');
+Route::view('/about', 'pages.about')->name('tentang-kami');
+
