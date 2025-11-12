@@ -11,10 +11,6 @@ class File extends Model
     use HasFactory, HasUuid;
 
     protected $table = 'files';
-
-    /**
-     * Karena memakai UUID sebagai primary key.
-     */
     public $incrementing = false;
     protected $keyType = 'string';
 
@@ -25,7 +21,7 @@ class File extends Model
     ];
 
     /**
-     * Relasi ke model yang memiliki file (produk, toko, dll)
+     * Relasi ke model yang memiliki file (produk, toko, faq, dll)
      */
     public function fileable()
     {
@@ -33,15 +29,17 @@ class File extends Model
     }
 
     /**
-     * Akses URL lengkap file dari storage publik.
+     * URL lengkap file dari storage publik
      */
     public function getUrlAttribute()
     {
-        return asset('storage/' . $this->filepath);
+        return str_starts_with($this->filepath, 'storage/')
+            ? asset($this->filepath)
+            : asset('storage/' . $this->filepath);
     }
 
     /**
-     * Deteksi apakah file berupa video atau gambar.
+     * Deteksi apakah file berupa video atau gambar
      */
     public function getTypeAttribute()
     {

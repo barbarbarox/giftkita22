@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\Helpers\GoogleMapsHelper;
 
 class Toko extends Model
 {
@@ -22,13 +23,19 @@ class Toko extends Model
         'instagram',
         'facebook',
         'whatsapp',
+
+        // 🌍 Kolom lokasi
+        'google_map_link',
+        'embed_map_link',    // ← TAMBAHAN BARU
+        'latitude',
+        'longitude',
     ];
 
     public $incrementing = false;
     protected $keyType = 'string';
 
     /**
-     * 🔹 Secara otomatis buat UUID setiap kali record baru dibuat
+     * 🔹 Otomatis buat UUID saat record baru dibuat
      */
     protected static function boot()
     {
@@ -40,7 +47,7 @@ class Toko extends Model
                 $toko->uuid = (string) Str::uuid();
             }
 
-            // Jika kolom ID juga UUID (bukan auto increment)
+            // Jika kolom ID juga menggunakan UUID
             if (empty($toko->id)) {
                 $toko->id = (string) Str::uuid();
             }
@@ -61,5 +68,72 @@ class Toko extends Model
     public function produks()
     {
         return $this->hasMany(Produk::class, 'toko_id', 'id');
+    }
+
+    /**
+     * 🗺️ Accessor: Dapatkan embed URL yang siap pakai
+     * Prioritas menggunakan embed_map_link dari database
+     */
+    public function getEmbedUrlAttribute()
+    {
+        // PRIORITAS 1: Gunakan embed_map_link jika sudah ada (sudah diproses oleh Controller)
+        if (!empty($this->embed_map_link)) {
+            return $this->embed_map_link;
+        }
+
+        // PRIORITAS 2: Jika ada latitude & longitude, buat embed URL dari koordinat
+        if (!empty($this->latitude) && !empty($this->longitude)) {
+            return "https://www.google.com/maps?q={$this->latitude},{$this->longitude}&hl=id&z=15&output=embed";
+        }
+
+        // PRIORITAS 3 (Fallback): Convert real-time dari google_map_link
+        // Ini hanya digunakan jika embed_map_link dan koordinat belum ada
+        if (!empty($this->google_map_link)) {
+            return GoogleMapsHelper::convertToEmbed($this->google_map_link);
+        }
+
+        return null;
+    }
+
+    /**
+     * 🗺️ Accessor: Dapatkan koordinat dalam format array
+     */
+    public function getCoordinatesAttribute()
+    {
+        if (!empty($this->latitude) && !empty($this->longitude)) {
+            return [
+                'lat' => (float) $this->latitude,
+                'lng' => (float) $this->longitude,
+            ];
+        }
+
+        return null;
+    }
+
+    /**
+     * 🗺️ Helper: Cek apakah toko punya lokasi map yang valid
+     */
+    public function hasMapLocation()
+    {
+        return !empty($this->google_map_link) || 
+               (!empty($this->latitude) && !empty($this->longitude));
+    }
+
+    /**
+     * 📍 Helper: Generate link Google Maps untuk dibuka di app
+     */
+    public function getMapLinkAttribute()
+    {
+        // Jika ada google_map_link, gunakan itu
+        if (!empty($this->google_map_link)) {
+            return $this->google_map_link;
+        }
+
+        // Fallback: buat link dari koordinat
+        if (!empty($this->latitude) && !empty($this->longitude)) {
+            return "https://www.google.com/maps?q={$this->latitude},{$this->longitude}";
+        }
+
+        return null;
     }
 }

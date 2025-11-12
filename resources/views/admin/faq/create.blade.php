@@ -1,10 +1,12 @@
 @extends('admin.layouts.app')
 
-@section('title', 'Tambah FAQ')
+@section('title', 'Tambah FAQ | GiftKita Admin')
 
 @section('content')
-<div class="max-w-3xl mx-auto p-6">
-    <h1 class="text-2xl font-bold text-gray-800 mb-6">📝 Tambah FAQ Baru</h1>
+<div class="max-w-5xl mx-auto p-8">
+    <h1 class="text-2xl font-bold text-[#007daf] mb-6 flex items-center gap-2">
+        📝 Tambah FAQ Baru
+    </h1>
 
     {{-- ✅ Notifikasi error validasi --}}
     @if ($errors->any())
@@ -17,32 +19,42 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.faq.store') }}" method="POST" class="space-y-5 bg-white p-6 rounded-lg shadow-md border">
+    {{-- ✅ Form utama --}}
+    <form action="{{ route('admin.faq.store') }}" method="POST" enctype="multipart/form-data"
+          class="space-y-6 bg-white p-8 rounded-xl shadow-lg border border-gray-100">
         @csrf
 
         {{-- Pertanyaan --}}
         <div>
-            <label for="pertanyaan" class="block text-gray-700 font-semibold mb-2">Pertanyaan</label>
+            <label for="pertanyaan" class="block text-gray-700 font-semibold mb-2">
+                Pertanyaan
+            </label>
             <input type="text" id="pertanyaan" name="pertanyaan" value="{{ old('pertanyaan') }}"
-                   class="w-full border-gray-300 rounded-lg focus:ring-[#007daf] focus:border-[#007daf]" required>
+                   class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#007daf] focus:outline-none"
+                   placeholder="Masukkan pertanyaan FAQ..." required>
         </div>
 
-        {{-- Jawaban --}}
+        {{-- Jawaban (pakai CKEditor) --}}
         <div>
-            <label for="jawaban" class="block text-gray-700 font-semibold mb-2">Jawaban</label>
-            <textarea id="jawaban" name="jawaban" rows="4"
-                      class="w-full border-gray-300 rounded-lg focus:ring-[#007daf] focus:border-[#007daf]"
-                      required>{{ old('jawaban') }}</textarea>
+            <label for="jawaban" class="block text-gray-700 font-semibold mb-2">
+                Jawaban
+            </label>
+            <textarea id="editor" name="jawaban" rows="8"
+                      class="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#007daf] focus:outline-none"
+                      placeholder="Tulis jawaban FAQ dengan format lengkap...">{{ old('jawaban') }}</textarea>
         </div>
 
         {{-- Role (Kategori FAQ) --}}
         <div>
-            <label for="role" class="block text-gray-700 font-semibold mb-2">Untuk Pengguna</label>
-            <select id="role" name="role" class="w-full border-gray-300 rounded-lg focus:ring-[#007daf] focus:border-[#007daf]" required>
+            <label for="role" class="block text-gray-700 font-semibold mb-2">
+                Untuk Pengguna
+            </label>
+            <select id="role" name="role"
+                    class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#007daf] focus:outline-none" required>
                 <option value="" disabled selected>Pilih kategori pengguna...</option>
                 <option value="pembeli" {{ old('role') == 'pembeli' ? 'selected' : '' }}>Pembeli</option>
                 <option value="penjual" {{ old('role') == 'penjual' ? 'selected' : '' }}>Penjual</option>
-                <option value="umum" {{ old('role') == 'umum' ? 'selected' : '' }}>Umum</option>
+                <option value="semua" {{ old('role') == 'semua' ? 'selected' : '' }}>Semua</option>
             </select>
         </div>
 
@@ -59,4 +71,24 @@
         </div>
     </form>
 </div>
+
+{{-- ✅ CKEditor CDN + konfigurasi upload gambar --}}
+<script src="https://cdn.ckeditor.com/ckeditor5/41.4.2/classic/ckeditor.js"></script>
+<script>
+    ClassicEditor
+        .create(document.querySelector('#editor'), {
+            ckfinder: {
+                uploadUrl: '{{ route("admin.faq.uploadImage") }}?_token={{ csrf_token() }}'
+            },
+            toolbar: {
+                items: [
+                    'heading', '|', 'bold', 'italic', 'link', 'blockQuote', 'numberedList', 'bulletedList',
+                    '|', 'insertTable', 'undo', 'redo', '|', 'imageUpload'
+                ]
+            }
+        })
+        .catch(error => {
+            console.error(error);
+        });
+</script>
 @endsection

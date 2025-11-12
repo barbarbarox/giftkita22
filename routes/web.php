@@ -15,6 +15,7 @@ use App\Http\Controllers\Penjual\ProdukController;
 use App\Http\Controllers\Penjual\PesananController;
 use App\Http\Controllers\Auth\PenjualAuthController;
 use App\Http\Controllers\Penjual\BantuanController;
+use App\Http\Controllers\Auth\GooglePenjualController;
 
 // Controllers Admin
 use App\Http\Controllers\Admin\AdminAuthController;
@@ -31,9 +32,11 @@ use App\Http\Controllers\Admin\AdminFaqController;
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // 🔐 Login & Logout admin (tanpa middleware auth)
-    Route::get('/olgin', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/olgin', [AdminAuthController::class, 'login'])->name('login.post');
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+    Route::post('/faq/upload-image', [AdminFaqController::class, 'uploadImage'])->name('admin.faq.uploadImage');
+
 
     // 🔒 Hanya untuk admin yang sudah login
     Route::middleware('auth:admin')->group(function () {
@@ -52,6 +55,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             ->whereUuid('faq'); // ✅ penting agar route binding UUID berfungsi
     });
 });
+Route::post('/admin/faq/upload-image', [AdminFaqController::class, 'uploadImage'])
+    ->name('admin.faq.uploadImage');
 
 /*
 |--------------------------------------------------------------------------
@@ -82,9 +87,23 @@ Route::post('/penjual/logout', [PenjualAuthController::class, 'logout'])->name('
 // ❓ FAQ
 Route::get('/faq', [FaqController::class, 'index'])->name('faq.index');
 
+// Login Google untuk Penjual
+Route::get('/auth/google/redirect', [PenjualAuthController::class, 'redirectToGoogle'])->name('penjual.google.redirect');
+Route::get('/auth/google/callback', [PenjualAuthController::class, 'handleGoogleCallback'])->name('penjual.google.callback');
+
+Route::get('/auth/google/redirect', [PenjualAuthController::class, 'redirectToGoogle'])->name('penjual.google.redirect');
+Route::get('/auth/google/callback', [PenjualAuthController::class, 'handleGoogleCallback'])->name('penjual.google.callback');
+
+// 🔐 Registrasi Penjual
+Route::get('/penjual/register', [PenjualAuthController::class, 'showRegisterForm'])->name('penjual.register');
+Route::post('/penjual/register', [PenjualAuthController::class, 'register'])->name('penjual.register.post');
+Route::get('/auth/google', [PenjualAuthController::class, 'redirectToGoogle'])->name('penjual.google.redirect');
+Route::get('/auth/google/callback', [PenjualAuthController::class, 'handleGoogleCallback'])->name('penjual.google.callback');
 // 🚪 Logout Umum
 Route::get('/logout', fn() => redirect('/')->with('status', 'Anda telah logout.'))->name('logout');
-
+Route::view('/kebijakan-privasi', 'pages.kebijakan-privasi')->name('kebijakan-privasi');
+Route::view('/kebijakan-layanan', 'pages.kebijakan-layanan')->name('kebijakan-layanan');
+Route::view('/about', 'pages.about')->name('tentang-kami');
 /*
 |--------------------------------------------------------------------------
 | ROUTE PENJUAL (Hanya bisa diakses oleh penjual login)

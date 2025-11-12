@@ -14,7 +14,7 @@ class Penjual extends Authenticatable
 
     /**
      * Karena memakai UUID sebagai primary key,
-     * kita pastikan Laravel tahu bahwa ID-nya bukan auto-increment.
+     * pastikan Laravel tahu bahwa ID-nya bukan auto-increment.
      */
     public $incrementing = false;
     protected $keyType = 'string';
@@ -24,9 +24,18 @@ class Penjual extends Authenticatable
         'email',
         'password',
         'no_hp',
+        'google_id', // ✅ ditambahkan agar tersimpan ke database
     ];
 
-    protected $hidden = ['password'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     /**
      * Relasi: satu penjual memiliki banyak toko.

@@ -4,12 +4,15 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Faq;
+use App\Models\File as FileModel;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AdminFaqController extends Controller
 {
     /**
-     * Tampilkan daftar semua FAQ
+     * 🧾 Tampilkan daftar semua FAQ
      */
     public function index()
     {
@@ -18,7 +21,7 @@ class AdminFaqController extends Controller
     }
 
     /**
-     * Form tambah FAQ
+     * 📝 Form tambah FAQ
      */
     public function create()
     {
@@ -26,7 +29,7 @@ class AdminFaqController extends Controller
     }
 
     /**
-     * Simpan FAQ baru
+     * 💾 Simpan FAQ baru
      */
     public function store(Request $request)
     {
@@ -39,11 +42,11 @@ class AdminFaqController extends Controller
         Faq::create($validated);
 
         return redirect()->route('admin.faq.index')
-            ->with('success', 'FAQ berhasil ditambahkan!');
+            ->with('success', '✅ FAQ berhasil ditambahkan!');
     }
 
     /**
-     * Form edit FAQ
+     * ✏️ Form edit FAQ
      */
     public function edit($uuid)
     {
@@ -52,7 +55,7 @@ class AdminFaqController extends Controller
     }
 
     /**
-     * Update FAQ
+     * 🔄 Update FAQ
      */
     public function update(Request $request, $uuid)
     {
@@ -67,11 +70,11 @@ class AdminFaqController extends Controller
         $faq->update($validated);
 
         return redirect()->route('admin.faq.index')
-            ->with('success', 'FAQ berhasil diperbarui!');
+            ->with('success', '✅ FAQ berhasil diperbarui!');
     }
 
     /**
-     * Hapus FAQ
+     * 🗑️ Hapus FAQ
      */
     public function destroy($uuid)
     {
@@ -79,6 +82,41 @@ class AdminFaqController extends Controller
         $faq->delete();
 
         return redirect()->route('admin.faq.index')
-            ->with('success', 'FAQ berhasil dihapus!');
+            ->with('success', '🗑️ FAQ berhasil dihapus!');
+    }
+
+    /**
+     * 🖼️ Upload gambar dari CKEditor + simpan di tabel files
+     */
+    public function uploadImage(Request $request)
+    {
+        $request->validate([
+            'upload' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:2048'
+        ]);
+
+        if ($request->hasFile('upload')) {
+            $file = $request->file('upload');
+
+            // Buat nama file unik
+            $filename = uniqid('faq_') . '_' . preg_replace('/\s+/', '_', $file->getClientOriginalName());
+            
+            // Simpan ke storage publik
+            $path = $file->storeAs('uploads/faq', $filename, 'public');
+
+            // Simpan ke tabel files
+            FileModel::create([
+                'id' => (string) Str::uuid(),
+                'filepath' => 'storage/app/public/faq' . $path,
+                'fileable_id' => null, // bisa dikaitkan ke FAQ tertentu nanti
+                'fileable_type' => Faq::class,
+            ]);
+
+            // Kembalikan respons JSON untuk CKEditor
+            return response()->json([
+                'url' => asset('storage/' . $path)
+            ]);
+        }
+
+        return response()->json(['error' => 'Tidak ada file yang diupload.'], 400);
     }
 }
