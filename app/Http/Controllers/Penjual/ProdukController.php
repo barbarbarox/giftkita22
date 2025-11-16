@@ -53,7 +53,6 @@ class ProdukController extends Controller
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
-            'stok' => 'required|integer|min:0',
             'kategori_id' => 'required|exists:kategoris,id',
             'toko_id' => 'required|exists:tokos,id',
             'files.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,webm,avi|max:51200', // max 50MB
@@ -70,7 +69,7 @@ class ProdukController extends Controller
             'kategori_id' => $validated['kategori_id'],
             'nama' => $validated['nama'],
             'deskripsi' => $validated['deskripsi'] ?? null,
-            'stok' => $validated['stok'],
+
             'harga' => $validated['harga'],
         ]);
 
@@ -122,7 +121,6 @@ class ProdukController extends Controller
             'nama' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'harga' => 'required|numeric|min:0',
-            'stok' => 'required|integer|min:0',
             'kategori_id' => 'required|exists:kategoris,id',
             'toko_id' => 'required|exists:tokos,id',
             'files.*' => 'nullable|file|mimes:jpg,jpeg,png,mp4,mov,webm,avi|max:51200',
@@ -133,7 +131,6 @@ class ProdukController extends Controller
             'nama' => $validated['nama'],
             'deskripsi' => $validated['deskripsi'] ?? null,
             'harga' => $validated['harga'],
-            'stok' => $validated['stok'],
             'kategori_id' => $validated['kategori_id'],
             'toko_id' => $validated['toko_id'],
         ]);

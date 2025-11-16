@@ -1,92 +1,414 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta charset="UTF-8">
-    <title>Login Admin | GiftKita</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Login Admin | GiftKita</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
-<body class="bg-gradient-to-br from-[#007daf] via-[#c771d4] to-[#ffb829] min-h-screen flex justify-center items-center">
-
-    <div class="bg-white/95 backdrop-blur-md shadow-2xl rounded-2xl p-8 w-[90%] max-w-md transition-all duration-300 hover:scale-[1.02]">
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-[#007daf] via-[#c771d4] to-[#ffb829]">
-                Admin GiftKita
-            </h1>
-            <p class="text-gray-500 text-sm mt-2">Silakan login untuk melanjutkan</p>
+<body class="min-h-screen relative overflow-hidden">
+    <!-- Animated Background -->
+    <div class="fixed inset-0 -z-10">
+        <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600"></div>
+        <div class="absolute inset-0 opacity-30">
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
+            <div class="bubble"></div>
         </div>
-
-        {{-- ALERT ERROR --}}
-        @if ($errors->any())
-            <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-3 mb-4 animate-fade-in">
-                <ul class="text-sm list-disc list-inside">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-        @endif
-
-        {{-- FORM LOGIN --}}
-        <form method="POST" action="{{ route('admin.login.post') }}" class="space-y-5">
-            @csrf
-            {{-- EMAIL --}}
-            <div>
-                <label for="email" class="block text-gray-700 font-semibold mb-1">Email</label>
-                <input type="email" id="email" name="email"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-[#007daf] focus:outline-none"
-                       placeholder="contoh@email.com" required>
-            </div>
-
-            {{-- PASSWORD --}}
-            <div class="relative">
-                <label for="password" class="block text-gray-700 font-semibold mb-1">Password</label>
-                <input type="password" id="password" name="password"
-                       class="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:ring-2 focus:ring-[#c771d4] focus:outline-none"
-                       placeholder="••••••••" required>
-                <i id="togglePassword" class='bx bx-show absolute right-3 top-9 text-gray-500 text-xl cursor-pointer transition hover:text-[#c771d4]'></i>
-            </div>
-
-            {{-- TOMBOL LOGIN --}}
-            <button type="submit"
-                    class="w-full bg-gradient-to-r from-[#007daf] via-[#c771d4] to-[#ffb829] text-white py-2.5 rounded-lg font-semibold shadow-lg hover:shadow-xl hover:scale-[1.03] transition duration-200">
-                Masuk
-            </button>
-        </form>
-
-        <p class="text-center text-sm text-gray-500 mt-6">
-            © {{ date('Y') }} GiftKita — Panel Admin
-        </p>
     </div>
 
-    {{-- SCRIPT TOGGLE PASSWORD --}}
-    <script>
-        const passwordInput = document.getElementById("password");
-        const toggleIcon = document.getElementById("togglePassword");
+    <!-- Main Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl">
+            <!-- Back Button -->
+            <a href="/" class="inline-flex items-center gap-2 text-white mb-6 hover:gap-3 transition-all duration-300 group">
+                <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span class="font-medium">Kembali ke Beranda</span>
+            </a>
 
-        toggleIcon.addEventListener("click", () => {
-            const isHidden = passwordInput.getAttribute("type") === "password";
-            passwordInput.setAttribute("type", isHidden ? "text" : "password");
-            toggleIcon.classList.toggle("bx-show");
-            toggleIcon.classList.toggle("bx-hide");
+            <!-- Card Container -->
+            <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
+                <div class="grid md:grid-cols-2 gap-0">
+                    <!-- Left Side - Illustration -->
+                    <div class="hidden md:flex bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-12 items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 opacity-10">
+                            <div class="floating-shape"></div>
+                            <div class="floating-shape"></div>
+                            <div class="floating-shape"></div>
+                        </div>
+                        <div class="relative z-10 text-white text-center">
+                            <div class="w-32 h-32 mx-auto mb-6 relative">
+                                <div class="absolute inset-0 bg-white/20 rounded-full animate-ping"></div>
+                                <div class="relative bg-white/30 backdrop-blur-md rounded-full w-full h-full flex items-center justify-center">
+                                    <i class="fas fa-shield-halved text-6xl"></i>
+                                </div>
+                            </div>
+                            <h2 class="text-3xl font-bold mb-4">Admin Panel</h2>
+                            <p class="text-white/90 leading-relaxed mb-6">
+                                Kelola platform GiftKita dengan dashboard admin yang powerful dan mudah digunakan
+                            </p>
+                            <div class="mt-8 space-y-3">
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fas fa-lock text-green-300"></i>
+                                    <span>Akses aman & terenkripsi</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fas fa-chart-pie text-green-300"></i>
+                                    <span>Dashboard analytics lengkap</span>
+                                </div>
+                                <div class="flex items-center gap-3 text-sm">
+                                    <i class="fas fa-cog text-green-300"></i>
+                                    <span>Kontrol penuh sistem</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            // Tambahkan animasi kecil saat diklik
-            toggleIcon.classList.add("scale-125");
-            setTimeout(() => toggleIcon.classList.remove("scale-125"), 150);
-        });
-    </script>
+                    <!-- Right Side - Form -->
+                    <div class="p-8 md:p-12 flex flex-col justify-center">
+                        <!-- Header -->
+                        <div class="text-center mb-8">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full mb-4">
+                                <i class="fas fa-user-shield text-2xl text-white"></i>
+                            </div>
+                            <h1 class="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
+                                Admin Login
+                            </h1>
+                            <p class="text-gray-600">Masuk ke GiftKita Admin Panel</p>
+                        </div>
 
-    {{-- ANIMASI CSS --}}
+                        <!-- Error Alert -->
+                        <div id="error-alert" class="hidden mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-exclamation-circle mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-sm">Login Gagal</p>
+                                    <p class="text-xs mt-1">Email atau password salah. Silakan coba lagi.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form -->
+                        <form method="POST" action="{{ route('admin.login.post') }}" class="space-y-5">
+                            @csrf
+                            <!-- Email -->
+                            <div class="form-group">
+                                <label class="block text-gray-700 font-semibold mb-2">
+                                    <i class="fas fa-envelope text-indigo-500 mr-2"></i>
+                                    Email Admin
+                                </label>
+                                <input type="email" name="email" required
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 outline-none"
+                                    placeholder="admin@giftkita.com">
+                            </div>
+
+                            <!-- Password with Eye Animation -->
+                            <div class="form-group">
+                                <label class="block text-gray-700 font-semibold mb-2">
+                                    <i class="fas fa-lock text-purple-500 mr-2"></i>
+                                    Password
+                                </label>
+                                <div class="relative">
+                                    <input type="password" id="password" name="password" required
+                                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 outline-none"
+                                        placeholder="••••••••">
+                                    <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-all duration-300">
+                                        <div class="eye-container">
+                                            <div class="eye">
+                                                <div class="eyelid eyelid-top"></div>
+                                                <div class="eyeball">
+                                                    <div class="pupil"></div>
+                                                </div>
+                                                <div class="eyelid eyelid-bottom"></div>
+                                            </div>
+                                        </div>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Remember Me -->
+                            <div class="flex items-center justify-between text-sm">
+                                <label class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer">
+                                    <span class="text-gray-600 group-hover:text-gray-800 transition">Ingat Saya</span>
+                                </label>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white font-bold py-4 rounded-xl hover:shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 mt-6">
+                                <span class="flex items-center justify-center gap-2">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Masuk ke Admin Panel
+                                </span>
+                            </button>
+                        </form>
+
+                        <!-- Security Notice -->
+                        <div class="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-info-circle text-amber-600 mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-xs text-amber-800">
+                                        <strong>Keamanan:</strong> Halaman ini khusus untuk administrator. Jangan bagikan kredensial login Anda kepada siapapun.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <p class="text-center text-gray-400 text-xs mt-8">
+                            © 2024 GiftKita — Admin Panel v1.0
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
-        @keyframes fade-in {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        /* Animated Background Bubbles */
+        .bubble {
+            position: absolute;
+            bottom: -100px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rise 10s infinite ease-in;
         }
-        .animate-fade-in { animation: fade-in 0.4s ease-in-out; }
+        
+        .bubble:nth-child(1) {
+            left: 10%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 0s;
+        }
+        
+        .bubble:nth-child(2) {
+            left: 30%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 2s;
+        }
+        
+        .bubble:nth-child(3) {
+            left: 50%;
+            width: 100px;
+            height: 100px;
+            animation-delay: 4s;
+        }
+        
+        .bubble:nth-child(4) {
+            left: 70%;
+            width: 70px;
+            height: 70px;
+            animation-delay: 6s;
+        }
+        
+        .bubble:nth-child(5) {
+            left: 90%;
+            width: 90px;
+            height: 90px;
+            animation-delay: 8s;
+        }
+        
+        @keyframes rise {
+            0% {
+                bottom: -100px;
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(100px);
+            }
+            100% {
+                bottom: 1080px;
+                transform: translateX(-100px);
+            }
+        }
+
+        /* Floating Shapes */
+        .floating-shape {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 15s infinite ease-in-out;
+        }
+        
+        .floating-shape:nth-child(1) {
+            top: 10%;
+            left: 20%;
+            animation-delay: 0s;
+        }
+        
+        .floating-shape:nth-child(2) {
+            top: 60%;
+            right: 20%;
+            animation-delay: 5s;
+        }
+        
+        .floating-shape:nth-child(3) {
+            bottom: 20%;
+            left: 60%;
+            animation-delay: 10s;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(20px, -20px) rotate(90deg);
+            }
+            50% {
+                transform: translate(0, -40px) rotate(180deg);
+            }
+            75% {
+                transform: translate(-20px, -20px) rotate(270deg);
+            }
+        }
+
+        /* Eye Animation Styles */
+        .eye-container {
+            width: 24px;
+            height: 24px;
+            position: relative;
+        }
+
+        .eye {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .eyeball {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            border: 2px solid #374151;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pupil {
+            width: 8px;
+            height: 8px;
+            background: #1f2937;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+        }
+
+        .eyelid {
+            position: absolute;
+            width: 24px;
+            background: #374151;
+            left: 50%;
+            transform: translateX(-50%);
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+
+        .eyelid-top {
+            height: 12px;
+            top: 0;
+            transform: translateX(-50%) translateY(-100%);
+        }
+
+        .eyelid-bottom {
+            height: 12px;
+            bottom: 0;
+            transform: translateX(-50%) translateY(100%);
+        }
+
+        /* Eye Closed State */
+        .eye.closed .eyelid-top {
+            transform: translateX(-50%) translateY(6px);
+        }
+
+        .eye.closed .eyelid-bottom {
+            transform: translateX(-50%) translateY(-6px);
+        }
+
+        /* Form Input Focus Effects */
+        .form-group input:focus {
+            transform: scale(1.01);
+        }
+
+        /* Smooth Transitions */
+        * {
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 
+    <script>
+        // Toggle Password Visibility with Eye Animation
+        const input = document.getElementById('password');
+        const toggle = document.getElementById('togglePassword');
+        const eye = toggle.querySelector('.eye');
+
+        toggle.addEventListener('click', () => {
+            const isPassword = input.type === 'password';
+            input.type = isPassword ? 'text' : 'password';
+            
+            if (isPassword) {
+                // Open eye
+                eye.classList.add('closed');
+            } else {
+                // Close eye
+                eye.classList.remove('closed');
+                
+            }
+        });
+
+        // Mouse Follow Effect on Pupil
+        const container = document.querySelector('.eye-container');
+        const pupil = container.querySelector('.pupil');
+        
+        container.addEventListener('mousemove', (e) => {
+            if (eye.classList.contains('closed')) return;
+            
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left - rect.width / 2;
+            const y = e.clientY - rect.top - rect.height / 2;
+            
+            const angle = Math.atan2(y, x);
+            const distance = Math.min(Math.sqrt(x * x + y * y), 4);
+            
+            const pupilX = Math.cos(angle) * distance;
+            const pupilY = Math.sin(angle) * distance;
+            
+            pupil.style.transform = `translate(${pupilX}px, ${pupilY}px)`;
+        });
+        
+        container.addEventListener('mouseleave', () => {
+            pupil.style.transform = 'translate(0, 0)';
+        });
+
+        // Input Animation on Focus
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.style.transform = 'scale(1.01)';
+            });
+            
+            input.addEventListener('blur', function() {
+                this.parentElement.style.transform = 'scale(1)';
+            });
+        });
+    </script>
 </body>
 </html>

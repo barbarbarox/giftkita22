@@ -28,6 +28,31 @@ class PesananController extends Controller
     }
 
     /**
+     * Tampilkan detail pesanan
+     */
+    public function show($id)
+    {
+        $penjualId = Auth::id();
+
+        $pesanan = Pesanan::with(['produk.toko', 'produk.kategori', 'produk.files'])
+            ->find($id);
+
+        // Validasi jika pesanan tidak ditemukan
+        if (!$pesanan) {
+            return redirect()->route('penjual.pesanan.index')
+                ->with('error', 'Pesanan tidak ditemukan.');
+        }
+
+        // Cegah akses dari penjual lain
+        if ($pesanan->produk->toko->penjual_id !== $penjualId) {
+            return redirect()->route('penjual.pesanan.index')
+                ->with('error', 'Anda tidak berhak melihat pesanan ini.');
+        }
+
+        return view('penjual.pesanan.show', compact('pesanan'));
+    }
+
+    /**
      * Update status pesanan (AJAX)
      */
     public function updateStatus(Request $request, $id)
@@ -54,7 +79,8 @@ class PesananController extends Controller
 
         $newStatus = $request->input('status');
 
-        $validStatuses = ['pending', 'diproses', 'selesai'];
+        // ✅ Update dengan status yang lengkap
+        $validStatuses = ['pending', 'dikonfirmasi', 'diproses', 'selesai', 'dibatalkan'];
         if (!in_array($newStatus, $validStatuses)) {
             return response()->json([
                 'success' => false,

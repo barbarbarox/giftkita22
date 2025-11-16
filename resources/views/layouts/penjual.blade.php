@@ -43,11 +43,13 @@
 
         <nav class="flex-1 p-4 space-y-3 overflow-y-auto">
             <a href="{{ route('penjual.dashboard') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Dashboard</a>
-            <a href="{{ route('penjual.profil') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Profil Penjual</a>
-            <a href="{{ route('penjual.toko.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Profil Toko</a>
+            <a href="{{ route('penjual.profil') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Profil</a>
+            <a href="{{ route('penjual.toko.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Toko Saya</a>
             <a href="{{ route('penjual.produk.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Produk</a>
             <a href="{{ route('penjual.pesanan.index') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Pesanan</a>
             <a href="{{ route('penjual.bantuan') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Bantuan & Faq</a>
+            <a href="{{ route('penjual.statistik') }}" class="block py-2.5 px-4 rounded hover:bg-white/20">Statistik</a>
+</a>
         </nav>
 
         {{-- Tombol Logout lebih menonjol --}}

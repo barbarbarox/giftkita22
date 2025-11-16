@@ -23,10 +23,8 @@ class Toko extends Model
         'instagram',
         'facebook',
         'whatsapp',
-
-        // 🌍 Kolom lokasi
         'google_map_link',
-        'embed_map_link',    // ← TAMBAHAN BARU
+        'embed_map_link',
         'latitude',
         'longitude',
     ];
@@ -42,12 +40,10 @@ class Toko extends Model
         parent::boot();
 
         static::creating(function ($toko) {
-            // Isi kolom UUID jika belum ada
             if (empty($toko->uuid)) {
                 $toko->uuid = (string) Str::uuid();
             }
 
-            // Jika kolom ID juga menggunakan UUID
             if (empty($toko->id)) {
                 $toko->id = (string) Str::uuid();
             }
@@ -71,23 +67,27 @@ class Toko extends Model
     }
 
     /**
+     * 🔹 Relasi ke Pesanan (satu toko punya banyak pesanan)
+     * ✅ TAMBAHAN BARU untuk fitur statistik
+     */
+    public function pesanans()
+    {
+        return $this->hasMany(Pesanan::class, 'toko_id', 'id');
+    }
+
+    /**
      * 🗺️ Accessor: Dapatkan embed URL yang siap pakai
-     * Prioritas menggunakan embed_map_link dari database
      */
     public function getEmbedUrlAttribute()
     {
-        // PRIORITAS 1: Gunakan embed_map_link jika sudah ada (sudah diproses oleh Controller)
         if (!empty($this->embed_map_link)) {
             return $this->embed_map_link;
         }
 
-        // PRIORITAS 2: Jika ada latitude & longitude, buat embed URL dari koordinat
         if (!empty($this->latitude) && !empty($this->longitude)) {
             return "https://www.google.com/maps?q={$this->latitude},{$this->longitude}&hl=id&z=15&output=embed";
         }
 
-        // PRIORITAS 3 (Fallback): Convert real-time dari google_map_link
-        // Ini hanya digunakan jika embed_map_link dan koordinat belum ada
         if (!empty($this->google_map_link)) {
             return GoogleMapsHelper::convertToEmbed($this->google_map_link);
         }
@@ -124,12 +124,10 @@ class Toko extends Model
      */
     public function getMapLinkAttribute()
     {
-        // Jika ada google_map_link, gunakan itu
         if (!empty($this->google_map_link)) {
             return $this->google_map_link;
         }
 
-        // Fallback: buat link dari koordinat
         if (!empty($this->latitude) && !empty($this->longitude)) {
             return "https://www.google.com/maps?q={$this->latitude},{$this->longitude}";
         }

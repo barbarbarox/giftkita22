@@ -3,18 +3,26 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Penjual;
-use App\Models\Kategori;
-use App\Models\Faq;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
     public function index()
     {
-        $total_penjual = Penjual::count();
-        $total_kategori = Kategori::count();
-        $total_faq = Faq::count();
+        // Hitung Total Penjual
+        $totalPenjual = DB::table('penjuals')->count();
 
-        return view('admin.dashboard', compact('total_penjual', 'total_kategori', 'total_faq'));
+        // Hitung Total Kategori
+        $totalKategori = DB::table('kategoris')->count();
+
+        // Hitung Total FAQ
+        $totalFaq = DB::table('faqs')->count();
+
+        return view('admin.dashboard', compact(
+            'totalPenjual',
+            'totalKategori',
+            'totalFaq'
+        ));
     }
 }

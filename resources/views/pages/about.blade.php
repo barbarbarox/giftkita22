@@ -8,11 +8,9 @@
     <div class="relative z-10 flex flex-col items-center justify-center">
         <h1 class="text-4xl font-bold mb-2">Tentang Kami</h1>
         <p class="text-lg opacity-90 text-center">Mengenal lebih dekat GiftKita: visi, misi, dan cerita kami untuk dunia promosi hampers buat hadiahmu lebih penuh makna cerita.</p>
-        <div class="mt-4 text-sm opacity-80">
-            <a href="/" class="hover:underline">Beranda</a> / <span>Tentang Kami</span>
-        </div>
     </div>
 </div>
+
 
 {{-- About Section --}}
 <div class="max-w-7xl mx-auto flex flex-col md:flex-row gap-12 py-12 px-4 sm:px-8 bg-white">

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pesanan;
+use App\Models\Produk;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -23,30 +24,58 @@ class PesananPublikController extends Controller
                 'email_pembeli' => 'nullable|email|max:255',
                 'no_hp_pembeli' => 'required|string|max:20',
                 'alamat_pembeli' => 'required|string',
-                'jumlah' => 'required|integer|min:1',
+                'google_map_link' => 'nullable|url|max:2000',
+                'latitude' => 'nullable|string|max:20',
+                'longitude' => 'nullable|string|max:20',
             ]);
 
-            // ✅ 2. Simpan ke database
-            Pesanan::create([
-                'id' => (string) Str::uuid(), // gunakan UUID sebagai id
+            // ✅ 2. Ambil data produk untuk generate WhatsApp link
+            $produk = Produk::with('toko')->findOrFail($validated['produk_id']);
+            $toko = $produk->toko;
+
+            // ✅ 3. Simpan pesanan ke database
+            $pesanan = Pesanan::create([
+                'id' => (string) Str::uuid(),
                 'produk_id' => $validated['produk_id'],
                 'nama_pembeli' => $validated['nama_pembeli'],
                 'email_pembeli' => $validated['email_pembeli'] ?? null,
                 'no_hp_pembeli' => $validated['no_hp_pembeli'],
                 'alamat_pembeli' => $validated['alamat_pembeli'],
-                'jumlah' => $validated['jumlah'],
+                'google_map_link' => $validated['google_map_link'] ?? null,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'jumlah' => 1, // Default 1 karena tidak ada input jumlah
                 'tanggal_pemesanan' => Carbon::now(),
                 'status' => 'pending',
             ]);
 
-            // ✅ 3. Kembalikan respon sukses ke frontend
+            // ✅ 4. Generate WhatsApp link
+            $whatsappNumber = $toko->whatsapp ?? '6281234567890'; // Fallback number
+            
+            // Bersihkan nomor WhatsApp (hapus karakter non-digit)
+            $whatsappNumber = preg_replace('/[^0-9]/', '', $whatsappNumber);
+            
+            // Pastikan format 62xxx
+            if (substr($whatsappNumber, 0, 1) === '0') {
+                $whatsappNumber = '62' . substr($whatsappNumber, 1);
+            } elseif (substr($whatsappNumber, 0, 2) !== '62') {
+                $whatsappNumber = '62' . $whatsappNumber;
+            }
+
+            // Generate pesan WhatsApp
+            $message = $this->generateWhatsAppMessage($pesanan, $produk, $toko);
+            
+            $whatsappUrl = "https://wa.me/{$whatsappNumber}?text=" . urlencode($message);
+
+            // ✅ 5. Kembalikan respon sukses dengan WhatsApp URL
             return response()->json([
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim!',
+                'whatsapp_url' => $whatsappUrl,
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
-            // ⚠️ 4a. Error validasi
+            // ⚠️ Error validasi
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal.',
@@ -54,7 +83,7 @@ class PesananPublikController extends Controller
             ], 422);
 
         } catch (\Exception $e) {
-            // ⚠️ 4b. Error umum (misal kolom tidak ada, DB gagal, dll)
+            // ⚠️ Error umum
             Log::error('Gagal menyimpan pesanan: ' . $e->getMessage());
 
             return response()->json([
@@ -63,5 +92,39 @@ class PesananPublikController extends Controller
                 'error_detail' => config('app.debug') ? $e->getMessage() : null,
             ], 500);
         }
+    }
+
+    /**
+     * Generate pesan WhatsApp
+     */
+    private function generateWhatsAppMessage($pesanan, $produk, $toko)
+    {
+        $message = "Halo *" . $toko->nama_toko . "*,\n\n";
+        $message .= "Saya tertarik nih dengan produk *" . $produk->nama . "*\n\n";
+        
+        $message .= "📝 *Detail Pembeli:*\n";
+        $message .= "Nama: " . $pesanan->nama_pembeli . "\n";
+        
+        if ($pesanan->no_hp_pembeli) {
+            $message .= "HP: " . $pesanan->no_hp_pembeli . "\n";
+        }
+        
+        if ($pesanan->email_pembeli) {
+            $message .= "Email: " . $pesanan->email_pembeli . "\n";
+        }
+        
+        $message .= "\n📍 *Alamat Pengiriman:*\n";
+        $message .= $pesanan->alamat_pembeli . "\n";
+        
+        // Tambahkan link Google Maps jika ada
+        if ($pesanan->google_map_link) {
+            $message .= "\n🗺️ Lokasi Maps: " . $pesanan->google_map_link . "\n";
+        } elseif ($pesanan->hasLocation()) {
+            $message .= "\n🗺️ Lokasi Maps: https://www.google.com/maps?q={$pesanan->latitude},{$pesanan->longitude}\n";
+        }
+        
+        $message .= "\nTerima kasih! 🎁";
+        
+        return $message;
     }
 }

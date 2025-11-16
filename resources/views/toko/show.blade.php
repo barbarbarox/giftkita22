@@ -26,7 +26,7 @@
                      style="width: 100px; height: 100px; border-radius: 16px; object-fit: cover; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 3px solid #fff;">
                 <div>
                     <h1 style="font-size: 1.6rem; font-weight: 800; color: #007daf; margin: 0;">{{ $toko->nama_toko }}</h1>
-                    <p style="color: gray; font-size: 0.9rem;">👤 {{ $toko->penjual->nama ?? 'Pemilik tidak diketahui' }}</p>
+                    <p style="color: gray; font-size: 0.9rem;">👤 {{ $toko->penjual->username ?? 'Pemilik tidak diketahui' }}</p>
                 </div>
             </div>
 

@@ -72,7 +72,7 @@
                             {{ $produk->deskripsi ?? 'Belum ada deskripsi.' }}
                         </p>
                         <p class="text-sm text-gray-700 mb-1">💰 Rp{{ number_format($produk->harga, 0, ',', '.') }}</p>
-                        <p class="text-sm text-gray-700 mb-1">📦 Stok: {{ $produk->stok }}</p>
+
                         <p class="text-sm text-gray-500">🏷️ {{ $produk->kategori->nama_kategori ?? '-' }}</p>
                     </div>
 

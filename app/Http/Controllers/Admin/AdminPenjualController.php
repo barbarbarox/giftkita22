@@ -6,17 +6,169 @@ use App\Http\Controllers\Controller;
 use App\Models\Penjual;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class AdminPenjualController extends Controller
 {
     /**
-     * Tampilkan semua penjual
+     * Tampilkan semua penjual dengan statistik
      */
     public function index()
     {
-        $penjuals = Penjual::latest()->get();
+        $penjuals = Penjual::latest()->get()->map(function($penjual) {
+            // Hitung jumlah toko
+            $jumlahToko = DB::table('tokos')
+                ->where('penjual_id', $penjual->id)
+                ->count();
+            
+            // Ambil ID semua toko milik penjual
+            $tokoIds = DB::table('tokos')
+                ->where('penjual_id', $penjual->id)
+                ->pluck('id');
+            
+            // Hitung total produk dari semua toko
+            $totalProduk = DB::table('produks')
+                ->whereIn('toko_id', $tokoIds)
+                ->count();
+            
+            // Hitung total pesanan
+            $totalPesanan = DB::table('pesanans')
+                ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+                ->whereIn('produks.toko_id', $tokoIds)
+                ->count();
+            
+            // Tambahkan data statistik ke object penjual
+            $penjual->jumlah_toko = $jumlahToko;
+            $penjual->total_produk = $totalProduk;
+            $penjual->total_pesanan = $totalPesanan;
+            
+            return $penjual;
+        });
+        
         return view('admin.penjual.index', compact('penjuals'));
+    }
+
+    /**
+     * Halaman monitoring detail penjual
+     */
+    public function monitoring($id)
+    {
+        $penjual = Penjual::findOrFail($id);
+        
+        // Ambil semua toko milik penjual
+        $tokos = DB::table('tokos')
+            ->where('penjual_id', $id)
+            ->get()
+            ->map(function($toko) {
+                // Hitung jumlah produk per toko
+                $toko->jumlah_produk = DB::table('produks')
+                    ->where('toko_id', $toko->id)
+                    ->count();
+                
+                // Hitung total pesanan per toko
+                $toko->total_pesanan = DB::table('pesanans')
+                    ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+                    ->where('produks.toko_id', $toko->id)
+                    ->count();
+                
+                return $toko;
+            });
+        
+        // ID semua toko
+        $tokoIds = $tokos->pluck('id')->toArray();
+        
+        // Statistik Overview
+        $totalToko = $tokos->count();
+        $totalProduk = DB::table('produks')
+            ->whereIn('toko_id', $tokoIds)
+            ->count();
+        $totalPesanan = DB::table('pesanans')
+            ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+            ->whereIn('produks.toko_id', $tokoIds)
+            ->count();
+        
+        // Total Pendapatan (jika ada kolom total di pesanan)
+        $totalPendapatan = DB::table('pesanans')
+            ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+            ->whereIn('produks.toko_id', $tokoIds)
+            ->sum(DB::raw('pesanans.jumlah * produks.harga'));
+        
+        // Daftar Produk (dengan info toko dan kategori)
+        $produks = DB::table('produks')
+            ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+            ->join('kategoris', 'produks.kategori_id', '=', 'kategoris.id')
+            ->whereIn('produks.toko_id', $tokoIds)
+            ->select(
+                'produks.*',
+                'tokos.nama_toko',
+                'kategoris.nama_kategori'
+            )
+            ->latest('produks.created_at')
+            ->get();
+        
+        // Grafik Penjualan Bulanan (12 bulan terakhir)
+        $chartLabels = [];
+        $chartData = [];
+        
+        for ($i = 11; $i >= 0; $i--) {
+            $date = Carbon::now()->subMonths($i);
+            $chartLabels[] = $date->isoFormat('MMM YYYY');
+            
+            $count = DB::table('pesanans')
+                ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+                ->whereIn('produks.toko_id', $tokoIds)
+                ->whereYear('pesanans.tanggal_pemesanan', $date->year)
+                ->whereMonth('pesanans.tanggal_pemesanan', $date->month)
+                ->count();
+            
+            $chartData[] = $count;
+        }
+        
+        // Produk Terlaris (Top 5)
+        $produkTerlaris = DB::table('pesanans')
+            ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+            ->whereIn('produks.toko_id', $tokoIds)
+            ->select(
+                'produks.nama',
+                DB::raw('SUM(pesanans.jumlah) as total_terjual'),
+                DB::raw('COUNT(pesanans.id) as jumlah_pesanan')
+            )
+            ->groupBy('produks.id', 'produks.nama')
+            ->orderByDesc('total_terjual')
+            ->limit(5)
+            ->get();
+        
+        // Riwayat Pesanan Terbaru (10 terakhir)
+        $pesananTerbaru = DB::table('pesanans')
+            ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
+            ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
+            ->whereIn('produks.toko_id', $tokoIds)
+            ->select(
+                'pesanans.*',
+                'produks.nama as nama_produk',
+                'produks.harga',
+                'tokos.nama_toko',
+                DB::raw('(pesanans.jumlah * produks.harga) as total_harga')
+            )
+            ->orderByDesc('pesanans.tanggal_pemesanan')
+            ->limit(10)
+            ->get();
+        
+        return view('admin.penjual.monitoring', compact(
+            'penjual',
+            'tokos',
+            'totalToko',
+            'totalProduk',
+            'totalPesanan',
+            'totalPendapatan',
+            'produks',
+            'chartLabels',
+            'chartData',
+            'produkTerlaris',
+            'pesananTerbaru'
+        ));
     }
 
     /**
@@ -86,7 +238,6 @@ class AdminPenjualController extends Controller
         return redirect()->route('admin.penjual.index')
             ->with('success', 'Data penjual berhasil diperbarui.');
     }
-
 
     /**
      * Hapus penjual

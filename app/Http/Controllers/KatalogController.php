@@ -14,8 +14,14 @@ class KatalogController extends Controller
 
         // Pencarian berdasarkan nama/deskripsi
         if ($request->filled('q')) {
-            $query->where('nama', 'like', '%' . $request->q . '%')
-                  ->orWhere('deskripsi', 'like', '%' . $request->q . '%');
+            $searchTerm = $request->q;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('nama', 'like', '%' . $searchTerm . '%')
+                  ->orWhere('deskripsi', 'like', '%' . $searchTerm . '%')
+                  ->orWhereHas('toko', function($tq) use ($searchTerm) {
+                      $tq->where('nama_toko', 'like', '%' . $searchTerm . '%');
+                  });
+            });
         }
 
         // Filter kategori
@@ -23,7 +29,24 @@ class KatalogController extends Controller
             $query->where('kategori_id', $request->kategori);
         }
 
-        $produks = $query->latest()->get();
+        // Sorting
+        switch ($request->input('sort')) {
+            case 'termurah':
+                $query->orderBy('harga', 'asc');
+                break;
+            case 'termahal':
+                $query->orderBy('harga', 'desc');
+                break;
+            case 'nama':
+                $query->orderBy('nama', 'asc');
+                break;
+            case 'terbaru':
+            default:
+                $query->latest();
+                break;
+        }
+
+        $produks = $query->get();
         $kategoris = Kategori::all();
 
         return view('katalog.index', compact('produks', 'kategoris'));

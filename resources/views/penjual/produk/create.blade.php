@@ -70,15 +70,6 @@
                 @error('deskripsi') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
             </div>
 
-            {{-- Stok --}}
-            <div>
-                <label for="stok" class="block text-gray-700 font-semibold mb-1">Stok</label>
-                <input type="number" id="stok" name="stok" min="0" 
-                    value="{{ old('stok', 0) }}"
-                    class="w-full border-gray-300 rounded-lg focus:ring-[#007daf] focus:border-[#007daf]"
-                    required>
-                @error('stok') <p class="text-red-500 text-sm mt-1">{{ $message }}</p> @enderror
-            </div>
 
             {{-- Harga --}}
             <div>

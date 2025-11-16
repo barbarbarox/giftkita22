@@ -131,7 +131,7 @@
         </div>
 
         {{-- ========================================================= --}}
-        {{-- 📍 LOKASI TOKO (BAGIAN PETA & INPUT) --}}
+        {{-- 📍 LOKASI TOKO (FULL WIDTH) --}}
         {{-- ========================================================= --}}
         <div class="md:col-span-2 p-6 bg-gray-50 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition">
             <h2 class="text-lg font-semibold text-[#007daf] mb-4 flex items-center gap-2">
@@ -139,42 +139,38 @@
             </h2>
 
             <div class="grid md:grid-cols-2 gap-6">
-                {{-- PREVIEW PETA --}}
+                {{-- PREVIEW PETA INTERAKTIF --}}
                 <div>
-                    <label class="block font-semibold mb-2">Preview Google Maps</label>
+                    <label class="block font-semibold mb-2">Preview Lokasi</label>
                     
-                    {{-- Preview iframe (akan diupdate via JavaScript) --}}
-                    <iframe id="mapPreviewFrame" 
-                            src="{{ $toko->embed_url     ?? '' }}" 
-                            width="100%" 
-                            height="300" 
-                            style="border:0;" 
-                            class="rounded-lg shadow-sm border border-gray-300 {{ $toko->hasMapLocation() ? '' : 'hidden' }}" 
-                            allowfullscreen="" 
-                            loading="lazy" 
-                            referrerpolicy="no-referrer-when-downgrade">
-                    </iframe>
-                    
-                    {{-- Placeholder jika belum ada peta --}}
-                    <div id="mapPlaceholder" 
-                         class="w-full h-[300px] flex items-center justify-center bg-gray-100 border border-gray-300 rounded-lg {{ $toko->hasMapLocation() ? 'hidden' : '' }}">
-                        <div class="text-center">
-                            <i class='bx bx-map text-gray-400 text-5xl mb-2'></i>
-                            <p class="text-gray-500 italic">Preview peta akan muncul di sini</p>
-                            <p class="text-xs text-gray-400 mt-1">Paste link Google Maps atau gunakan lokasi Anda</p>
+                    {{-- Map Container --}}
+                    <div id="mapContainer" class="w-full h-[350px] bg-gray-100 border border-gray-300 rounded-lg overflow-hidden relative">
+                        {{-- Map akan dimuat di sini --}}
+                        <div id="map" class="w-full h-full {{ $toko->hasMapLocation() ? '' : 'hidden' }}"></div>
+                        
+                        {{-- Placeholder jika belum ada peta --}}
+                        <div id="mapPlaceholder" class="w-full h-full flex items-center justify-center {{ $toko->hasMapLocation() ? 'hidden' : '' }}">
+                            <div class="text-center">
+                                <i class='bx bx-map text-gray-400 text-5xl mb-2'></i>
+                                <p class="text-gray-500 italic">Pilih lokasi di peta atau gunakan lokasi Anda</p>
+                            </div>
                         </div>
                     </div>
 
-                    {{-- Info koordinat saat ini --}}
-                    @if($toko->hasMapLocation())
-                    <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    {{-- Info koordinat --}}
+                    <div id="coordinateInfo" class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg {{ $toko->hasMapLocation() ? '' : 'hidden' }}">
                         <p class="text-xs text-blue-800">
                             <i class='bx bx-current-location'></i> 
-                            <strong>Koordinat saat ini:</strong><br>
-                            Lat: {{ $toko->latitude ?? '-' }}, Lng: {{ $toko->longitude ?? '-' }}
+                            <strong>Koordinat terpilih:</strong><br>
+                            <span id="displayCoordinates">
+                                @if($toko->hasMapLocation())
+                                    Lat: {{ $toko->latitude }}, Lng: {{ $toko->longitude }}
+                                @else
+                                    -
+                                @endif
+                            </span>
                         </p>
                     </div>
-                    @endif
                 </div>
 
                 {{-- FORM INPUT LOKASI --}}
@@ -184,35 +180,42 @@
                            name="google_map_link" 
                            id="google_map_link"
                            value="{{ old('google_map_link', $toko->google_map_link) }}"
-                           placeholder="https://maps.app.goo.gl/xxxxx atau https://goo.gl/maps/xxxxx"
+                           placeholder="https://maps.app.goo.gl/xxxxx atau paste link Google Maps"
                            class="w-full border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-[#007daf] mb-2">
                     
                     <div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4">
                         <p class="text-xs text-blue-800">
-                            <strong>💡 Cara mendapatkan link:</strong><br>
-                            1. Buka Google Maps di HP/Komputer<br>
-                            2. Cari lokasi toko Anda<br>
-                            3. Klik tombol "Bagikan" atau "Share"<br>
-                            4. Pilih "Salin link" atau "Copy link"<br>
-                            5. Paste di kolom di atas
+                            <strong>💡 3 Cara mendapatkan lokasi:</strong><br>
+                            1. <strong>Paste link</strong> dari Google Maps<br>
+                            2. <strong>Pilih di peta</strong> dengan tombol di bawah<br>
+                            3. <strong>Gunakan GPS</strong> lokasi Anda saat ini
                         </p>
                     </div>
 
-                    {{-- Hidden inputs untuk lat/lng (akan diisi otomatis oleh controller) --}}
+                    {{-- Hidden inputs untuk koordinat --}}
                     <input type="hidden" name="latitude" id="latitude" value="{{ old('latitude', $toko->latitude) }}">
                     <input type="hidden" name="longitude" id="longitude" value="{{ old('longitude', $toko->longitude) }}">
 
-                    {{-- Tombol gunakan lokasi saya --}}
-                    <button type="button" 
-                            id="getLocation"
-                            class="w-full px-4 py-2 bg-[#007daf] text-white rounded-lg text-sm font-medium hover:bg-[#006b9c] transition flex items-center justify-center gap-2">
-                        <i class='bx bx-current-location text-lg'></i>
-                        Gunakan Lokasi Saya Sekarang
-                    </button>
+                    {{-- Tombol Aksi --}}
+                    <div class="space-y-2">
+                        <button type="button" 
+                                id="pickLocation"
+                                class="w-full px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                            <i class='bx bx-map-pin text-lg'></i>
+                            Pilih Lokasi di Peta
+                        </button>
+
+                        <button type="button" 
+                                id="getLocation"
+                                class="w-full px-4 py-2 bg-[#007daf] text-white rounded-lg text-sm font-medium hover:bg-[#006b9c] transition flex items-center justify-center gap-2">
+                            <i class='bx bx-current-location text-lg'></i>
+                            Gunakan Lokasi Saya Sekarang
+                        </button>
+                    </div>
                     
                     <p class="text-xs text-gray-500 mt-2">
                         <i class='bx bx-info-circle'></i> 
-                        Sistem akan otomatis mengambil koordinat dari link yang Anda masukkan
+                        Koordinat akan otomatis terisi saat Anda memilih lokasi
                     </p>
 
                     {{-- Loading indicator --}}
@@ -247,47 +250,270 @@
 </div>
 
 {{-- ========================================================= --}}
-{{-- ⭐️ JAVASCRIPT untuk Preview Peta Real-time --}}
+{{-- 🗺️ LEAFLET.JS (Interactive Map) --}}
 {{-- ========================================================= --}}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+#map {
+    z-index: 1;
+}
+
+.leaflet-popup-content-wrapper {
+    border-radius: 8px;
+}
+
+@keyframes fade-in-down {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-down {
+    animation: fade-in-down 0.3s ease-out;
+}
+</style>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Ambil elemen
+    // ========================================
+    // INISIALISASI VARIABEL
+    // ========================================
     const linkInput = document.getElementById('google_map_link');
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
-    const mapPreview = document.getElementById('mapPreviewFrame');
+    const mapContainer = document.getElementById('map');
     const mapPlaceholder = document.getElementById('mapPlaceholder');
+    const coordinateInfo = document.getElementById('coordinateInfo');
+    const displayCoordinates = document.getElementById('displayCoordinates');
+    const pickLocationBtn = document.getElementById('pickLocation');
     const getLocationBtn = document.getElementById('getLocation');
     const loadingIndicator = document.getElementById('loadingIndicator');
 
+    let map = null;
+    let marker = null;
+    let isMapInitialized = false;
+
+    // Default center (ambil dari data toko atau Indonesia)
+    const currentLat = parseFloat(latInput.value) || -2.5489;
+    const currentLng = parseFloat(lngInput.value) || 118.0149;
+    const hasExistingLocation = latInput.value && lngInput.value;
+
     // ========================================
-    // 1. AUTO-EXTRACT KOORDINAT dari Link (HANYA UNTUK PREVIEW)
+    // 1. INISIALISASI PETA
+    // ========================================
+    function initializeMap(center = [currentLat, currentLng], zoom = hasExistingLocation ? 15 : 5) {
+        if (isMapInitialized) {
+            return;
+        }
+
+        // Show map, hide placeholder
+        mapContainer.classList.remove('hidden');
+        mapPlaceholder.classList.add('hidden');
+
+        // Initialize Leaflet map
+        map = L.map('map').setView(center, zoom);
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Add click event to map
+        map.on('click', function(e) {
+            const lat = e.latlng.lat;
+            const lng = e.latlng.lng;
+            
+            placeMarker(lat, lng);
+            updateInputs(lat, lng);
+        });
+
+        // Jika ada lokasi existing, tampilkan marker
+        if (hasExistingLocation) {
+            placeMarker(currentLat, currentLng);
+        }
+
+        isMapInitialized = true;
+    }
+
+    // ========================================
+    // 2. PLACE/UPDATE MARKER
+    // ========================================
+    function placeMarker(lat, lng) {
+        // Remove existing marker
+        if (marker) {
+            map.removeLayer(marker);
+        }
+
+        // Add new marker
+        marker = L.marker([lat, lng], {
+            draggable: true
+        }).addTo(map);
+
+        // Add popup
+        marker.bindPopup(`
+            <div class="text-center">
+                <strong>📍 Lokasi Toko</strong><br>
+                <small>${lat.toFixed(6)}, ${lng.toFixed(6)}</small>
+            </div>
+        `).openPopup();
+
+        // Update when marker is dragged
+        marker.on('dragend', function(e) {
+            const position = e.target.getLatLng();
+            updateInputs(position.lat, position.lng);
+        });
+
+        // Center map to marker
+        map.setView([lat, lng], 15);
+    }
+
+    // ========================================
+    // 3. UPDATE INPUT FIELDS
+    // ========================================
+    function updateInputs(lat, lng) {
+        // Update hidden inputs
+        latInput.value = lat.toFixed(7);
+        lngInput.value = lng.toFixed(7);
+
+        // Update Google Maps link
+        linkInput.value = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        // Show coordinate info
+        coordinateInfo.classList.remove('hidden');
+        displayCoordinates.textContent = `Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`;
+
+        // Show success notification
+        showNotification('✅ Lokasi berhasil dipilih!', 'success');
+    }
+
+    // ========================================
+    // 4. TOMBOL "PILIH LOKASI DI PETA"
+    // ========================================
+    pickLocationBtn.addEventListener('click', function() {
+        if (!isMapInitialized) {
+            // Initialize map 
+            if (hasExistingLocation) {
+                // Jika sudah ada lokasi, tampilkan itu
+                initializeMap([currentLat, currentLng], 15);
+            } else if (navigator.geolocation) {
+                // Jika belum ada, coba pakai GPS
+                loadingIndicator.classList.remove('hidden');
+                
+                navigator.geolocation.getCurrentPosition(
+                    function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        initializeMap([lat, lng], 13);
+                        placeMarker(lat, lng);
+                        updateInputs(lat, lng);
+                        
+                        loadingIndicator.classList.add('hidden');
+                        showNotification('🗺️ Klik pada peta untuk memilih lokasi toko', 'info');
+                    },
+                    function(error) {
+                        // Fallback to default center
+                        initializeMap();
+                        loadingIndicator.classList.add('hidden');
+                        showNotification('🗺️ Klik pada peta untuk memilih lokasi toko', 'info');
+                    }
+                );
+            } else {
+                initializeMap();
+                showNotification('🗺️ Klik pada peta untuk memilih lokasi toko', 'info');
+            }
+        } else {
+            showNotification('🗺️ Klik pada peta untuk memilih lokasi toko', 'info');
+        }
+    });
+
+    // ========================================
+    // 5. TOMBOL "GUNAKAN LOKASI SAYA"
+    // ========================================
+    getLocationBtn.addEventListener('click', function() {
+        if (!navigator.geolocation) {
+            showNotification('❌ Browser tidak mendukung geolokasi', 'error');
+            return;
+        }
+
+        loadingIndicator.classList.remove('hidden');
+        getLocationBtn.disabled = true;
+        getLocationBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Mengambil lokasi...';
+
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+
+                // Initialize map if not yet
+                if (!isMapInitialized) {
+                    initializeMap([lat, lng], 15);
+                }
+
+                // Place marker
+                placeMarker(lat, lng);
+                updateInputs(lat, lng);
+
+                // Reset button
+                getLocationBtn.disabled = false;
+                getLocationBtn.innerHTML = '<i class="bx bx-current-location text-lg"></i> Gunakan Lokasi Saya Sekarang';
+                loadingIndicator.classList.add('hidden');
+
+                showNotification('✅ Lokasi berhasil diambil!', 'success');
+            },
+            function(error) {
+                let errorMsg = 'Gagal mengambil lokasi';
+                
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMsg = 'Akses lokasi ditolak. Mohon aktifkan di pengaturan browser.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMsg = 'Informasi lokasi tidak tersedia';
+                        break;
+                    case error.TIMEOUT:
+                        errorMsg = 'Timeout saat mengambil lokasi';
+                        break;
+                }
+
+                showNotification('❌ ' + errorMsg, 'error');
+                
+                getLocationBtn.disabled = false;
+                getLocationBtn.innerHTML = '<i class="bx bx-current-location text-lg"></i> Gunakan Lokasi Saya Sekarang';
+                loadingIndicator.classList.add('hidden');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    });
+
+    // ========================================
+    // 6. PASTE LINK GOOGLE MAPS
     // ========================================
     linkInput.addEventListener('blur', function() {
         const url = this.value.trim();
         
-        if (!url) {
-            return;
-        }
+        if (!url) return;
 
-        // Tampilkan loading
-        if (loadingIndicator) {
-            loadingIndicator.classList.remove('hidden');
-        }
+        loadingIndicator.classList.remove('hidden');
 
-        // Coba extract koordinat dari URL TANPA mengubah nilai input
-        extractCoordinatesFromUrl(url);
-    });
-
-    // Fungsi extract koordinat dari berbagai format URL Google Maps
-    // PENTING: Fungsi ini HANYA untuk preview, TIDAK mengubah input google_map_link
-    function extractCoordinatesFromUrl(url) {
-        // Pattern untuk menangkap koordinat dari URL
+        // Extract coordinates from URL
         const patterns = [
-            /@(-?\d+\.\d+),(-?\d+\.\d+)/,  // Format: @lat,lng
-            /q=(-?\d+\.\d+),(-?\d+\.\d+)/, // Format: q=lat,lng
-            /place\/[^\/]+\/@(-?\d+\.\d+),(-?\d+\.\d+)/, // Format place/@lat,lng
-            /ll=(-?\d+\.\d+),(-?\d+\.\d+)/, // Format: ll=lat,lng
+            /@(-?\d+\.\d+),(-?\d+\.\d+)/,
+            /q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+            /place\/[^\/]+\/@(-?\d+\.\d+),(-?\d+\.\d+)/,
+            /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,
         ];
 
         let coordinates = null;
@@ -304,130 +530,42 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (coordinates) {
-            // Update input hidden (untuk preview saja, bukan untuk submit)
-            latInput.value = coordinates.lat;
-            lngInput.value = coordinates.lng;
-            
-            // Update preview peta
-            updateMapPreview(coordinates.lat, coordinates.lng);
+            // Initialize map if not yet
+            if (!isMapInitialized) {
+                initializeMap([coordinates.lat, coordinates.lng], 15);
+            }
+
+            // Place marker
+            placeMarker(coordinates.lat, coordinates.lng);
+            updateInputs(coordinates.lat, coordinates.lng);
+
+            showNotification('✅ Koordinat berhasil diambil dari link!', 'success');
         } else {
-            // Jika tidak bisa extract (link pendek/format lain)
-            // Biarkan controller yang handle saat submit
-            // Tetap tampilkan peta dari koordinat yang ada (jika ada)
-            if (latInput.value && lngInput.value) {
-                updateMapPreview(latInput.value, lngInput.value);
-            }
-            console.log('Link akan diproses oleh server');
+            // Jika tidak bisa extract, tetap update input
+            latInput.value = latInput.value || '';
+            lngInput.value = lngInput.value || '';
         }
 
-        // Sembunyikan loading
-        if (loadingIndicator) {
-            loadingIndicator.classList.add('hidden');
-        }
-    }
-
-    // ========================================
-    // 2. GUNAKAN LOKASI SAAT INI (Geolocation)
-    // ========================================
-    getLocationBtn.addEventListener('click', function() {
-        if (!navigator.geolocation) {
-            alert('❌ Browser Anda tidak mendukung fitur geolokasi');
-            return;
-        }
-
-        // Tampilkan loading
-        if (loadingIndicator) {
-            loadingIndicator.classList.remove('hidden');
-        }
-        getLocationBtn.disabled = true;
-        getLocationBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Mengambil lokasi...';
-
-        navigator.geolocation.getCurrentPosition(
-            function(position) {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-
-                // Update input hidden
-                latInput.value = lat;
-                lngInput.value = lng;
-
-                // Update link Google Maps
-                linkInput.value = `https://www.google.com/maps?q=${lat},${lng}`;
-
-                // Update preview peta
-                updateMapPreview(lat, lng);
-
-                // Reset button
-                getLocationBtn.disabled = false;
-                getLocationBtn.innerHTML = '<i class="bx bx-current-location text-lg"></i> Gunakan Lokasi Saya Sekarang';
-                
-                // Sembunyikan loading
-                if (loadingIndicator) {
-                    loadingIndicator.classList.add('hidden');
-                }
-
-                // Notifikasi sukses
-                showNotification('✅ Lokasi berhasil diambil!', 'success');
-            },
-            function(error) {
-                let errorMsg = 'Gagal mengambil lokasi';
-                
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMsg = 'Anda menolak izin akses lokasi. Mohon aktifkan di pengaturan browser.';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMsg = 'Informasi lokasi tidak tersedia';
-                        break;
-                    case error.TIMEOUT:
-                        errorMsg = 'Timeout saat mengambil lokasi';
-                        break;
-                }
-
-                alert('❌ ' + errorMsg);
-                
-                // Reset button
-                getLocationBtn.disabled = false;
-                getLocationBtn.innerHTML = '<i class="bx bx-current-location text-lg"></i> Gunakan Lokasi Saya Sekarang';
-                
-                // Sembunyikan loading
-                if (loadingIndicator) {
-                    loadingIndicator.classList.add('hidden');
-                }
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            }
-        );
+        loadingIndicator.classList.add('hidden');
     });
 
     // ========================================
-    // 3. UPDATE PREVIEW PETA
+    // 7. AUTO-LOAD MAP jika sudah ada lokasi
     // ========================================
-    function updateMapPreview(lat, lng) {
-        if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
-            // Sembunyikan peta, tampilkan placeholder
-            mapPreview.classList.add('hidden');
-            mapPlaceholder.classList.remove('hidden');
-            return;
-        }
-
-        // Update src iframe dengan koordinat
-        const embedUrl = `https://www.google.com/maps?q=${lat},${lng}&hl=id&z=15&output=embed`;
-        mapPreview.src = embedUrl;
-
-        // Tampilkan peta, sembunyikan placeholder
-        mapPreview.classList.remove('hidden');
-        mapPlaceholder.classList.add('hidden');
+    if (hasExistingLocation) {
+        // Auto-initialize map dengan lokasi existing
+        setTimeout(() => {
+            initializeMap([currentLat, currentLng], 15);
+        }, 500);
     }
 
     // ========================================
-    // 4. HELPER: Notifikasi
+    // 8. HELPER: NOTIFICATION
     // ========================================
     function showNotification(message, type = 'success') {
-        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        const bgColor = type === 'success' ? 'bg-green-500' : 
+                        type === 'error' ? 'bg-red-500' : 
+                        'bg-blue-500';
         
         const notification = document.createElement('div');
         notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in-down`;
@@ -439,30 +577,6 @@ document.addEventListener('DOMContentLoaded', function() {
             notification.remove();
         }, 3000);
     }
-
-    // Load preview saat halaman dimuat
-    const currentLat = latInput.value;
-    const currentLng = lngInput.value;
-    if (currentLat && currentLng) {
-        updateMapPreview(currentLat, currentLng);
-    }
 });
 </script>
-
-<style>
-@keyframes fade-in-down {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-in-down {
-    animation: fade-in-down 0.3s ease-out;
-}
-</style>
 @endsection
