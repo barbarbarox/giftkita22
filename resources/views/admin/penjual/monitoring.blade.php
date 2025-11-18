@@ -11,12 +11,81 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
             </a>
-            <div>
+            <div class="flex-1">
                 <h1 class="text-3xl font-bold text-gray-800">Monitoring Penjual</h1>
                 <p class="text-gray-600 mt-1">{{ $penjual->username }} ({{ $penjual->email }})</p>
             </div>
+            
+            {{-- Status Toggle Section --}}
+            <div class="bg-white rounded-xl shadow-lg p-4 border-2 {{ $penjual->isActive() ? 'border-green-200' : 'border-red-200' }}">
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gray-500 font-medium">Status Akun</p>
+                        <p class="text-lg font-bold {{ $penjual->isActive() ? 'text-green-600' : 'text-red-600' }}">
+                            {{ $penjual->isActive() ? 'Aktif' : 'Nonaktif' }}
+                        </p>
+                    </div>
+                    
+                    {{-- Toggle Switch --}}
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" 
+                               class="sr-only peer" 
+                               id="statusToggle"
+                               {{ $penjual->isActive() ? 'checked' : '' }}
+                               onchange="toggleStatus(this)">
+                        <div class="w-14 h-8 bg-red-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                </div>
+                
+                {{-- Info deaktivasi jika nonaktif --}}
+                @if($penjual->isInactive() && $penjual->deactivated_at)
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        <strong>Dinonaktifkan:</strong> {{ $penjual->deactivated_at->format('d M Y H:i') }}
+                    </p>
+                    @if($penjual->deactivation_reason)
+                    <p class="text-xs text-gray-600 mt-1">
+                        <strong>Alasan:</strong> {{ $penjual->deactivation_reason }}
+                    </p>
+                    @endif
+                </div>
+                @endif
+            </div>
         </div>
     </div>
+
+    {{-- Alert Messages --}}
+    @if(session('success'))
+    <div class="mb-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg flex items-center justify-between">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>{{ session('success') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+    @endif
+
+    @if(session('warning'))
+    <div class="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg flex items-center justify-between">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <span>{{ session('warning') }}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" class="text-yellow-700 hover:text-yellow-900">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+            </svg>
+        </button>
+    </div>
+    @endif
 
     {{-- Statistik Overview --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -309,6 +378,88 @@
     </div>
 </div>
 
+{{-- Modal Konfirmasi Deaktivasi --}}
+<div id="deactivateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="bg-red-100 p-3 rounded-full">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Nonaktifkan Penjual</h3>
+        </div>
+        
+        <form id="deactivateForm" method="POST" action="{{ route('admin.penjual.toggleStatus', $penjual->id) }}">
+            @csrf
+            <p class="text-gray-600 mb-4">
+                Anda yakin ingin menonaktifkan akun <strong>{{ $penjual->username }}</strong>?
+                Penjual tidak akan bisa login dan semua toko mereka akan dibekukan.
+            </p>
+            
+            <div class="mb-4">
+                <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
+                    Alasan Deaktivasi <span class="text-red-500">*</span>
+                </label>
+                <textarea 
+                    id="reason" 
+                    name="reason" 
+                    rows="3" 
+                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                    placeholder="Masukkan alasan deaktivasi..."
+                    required
+                ></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+                <button type="button" 
+                        onclick="closeDeactivateModal()" 
+                        class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+                    Nonaktifkan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Modal Konfirmasi Aktivasi --}}
+<div id="activateModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="bg-green-100 p-3 rounded-full">
+                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </div>
+            <h3 class="text-xl font-bold text-gray-800">Aktifkan Penjual</h3>
+        </div>
+        
+        <form method="POST" action="{{ route('admin.penjual.toggleStatus', $penjual->id) }}">
+            @csrf
+            <p class="text-gray-600 mb-6">
+                Anda yakin ingin mengaktifkan kembali akun <strong>{{ $penjual->username }}</strong>?
+                Penjual akan bisa login dan mengelola toko mereka kembali.
+            </p>
+            
+            <div class="flex gap-3">
+                <button type="button" 
+                        onclick="closeActivateModal()" 
+                        class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                    Batal
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                    Aktifkan
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 {{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -342,6 +493,45 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
     } else {
         btn.classList.add('border-blue-500', 'text-blue-600');
+    }
+});
+
+// Toggle Status Function
+function toggleStatus(checkbox) {
+    const isActive = checkbox.checked;
+    
+    if (isActive) {
+        // Tampilkan modal aktivasi
+        document.getElementById('activateModal').classList.remove('hidden');
+    } else {
+        // Tampilkan modal deaktivasi
+        document.getElementById('deactivateModal').classList.remove('hidden');
+    }
+    
+    // Reset checkbox ke state sebelumnya (akan diubah setelah submit form)
+    checkbox.checked = !checkbox.checked;
+}
+
+// Close Modal Functions
+function closeDeactivateModal() {
+    document.getElementById('deactivateModal').classList.add('hidden');
+    document.getElementById('reason').value = '';
+}
+
+function closeActivateModal() {
+    document.getElementById('activateModal').classList.add('hidden');
+}
+
+// Close modal ketika click di luar modal
+document.getElementById('deactivateModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeactivateModal();
+    }
+});
+
+document.getElementById('activateModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeActivateModal();
     }
 });
 

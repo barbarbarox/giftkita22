@@ -6,6 +6,7 @@ use App\Http\Controllers\KatalogController;
 use App\Http\Controllers\TokoPublikController;
 use App\Http\Controllers\PesananPublikController;
 use App\Http\Controllers\FaqController;
+use App\Http\Controllers\LaporanPenjualController;
 
 // Controllers Penjual
 use App\Http\Controllers\Penjual\DashboardController;
@@ -46,9 +47,32 @@ Route::prefix('admin')
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
             // 👤 CRUD Penjual
-            // ⚠️ PENTING: Route monitoring HARUS di atas route resource!
+            // ⚠️ PENTING: Route spesifik HARUS di atas route resource!
+                Route::prefix('laporan')->name('laporan.')->group(function () {
+                    Route::get('/', [App\Http\Controllers\Admin\LaporanController::class, 'index'])->name('index');
+                    Route::get('/statistik', [App\Http\Controllers\Admin\LaporanController::class, 'statistik'])->name('statistik');
+                    Route::get('/{id}', [App\Http\Controllers\Admin\LaporanController::class, 'show'])->name('show');
+                    Route::post('/{id}/update-status', [App\Http\Controllers\Admin\LaporanController::class, 'updateStatus'])->name('updateStatus');
+                    Route::post('/bulk-action', [App\Http\Controllers\Admin\LaporanController::class, 'bulkAction'])->name('bulkAction');
+                    Route::delete('/{id}', [App\Http\Controllers\Admin\LaporanController::class, 'destroy'])->name('destroy');
+                });
+            
+            // Monitoring Penjual
             Route::get('/penjual/{id}/monitoring', [AdminPenjualController::class, 'monitoring'])
                 ->name('penjual.monitoring');
+            
+            // ✅ ROUTES BARU: Toggle Status Penjual
+            Route::post('/penjual/{id}/toggle-status', [AdminPenjualController::class, 'toggleStatus'])
+                ->name('penjual.toggleStatus');
+            
+            Route::get('/penjual/{id}/deactivate-form', [AdminPenjualController::class, 'showDeactivateForm'])
+                ->name('penjual.deactivateForm');
+            
+            Route::post('/penjual/{id}/deactivate', [AdminPenjualController::class, 'deactivate'])
+                ->name('penjual.deactivate');
+            
+            Route::post('/penjual/{id}/activate', [AdminPenjualController::class, 'activate'])
+                ->name('penjual.activate');
             
             // Route resource di bawah
             Route::resource('/penjual', AdminPenjualController::class)
@@ -94,6 +118,10 @@ Route::get('/toko/{uuid}', [TokoPublikController::class, 'show'])->name('toko.sh
 
 // ❓ FAQ
 Route::get('/faq', [FaqController::class, 'index'])->name('faq.index');
+// Laporan Penjual (tanpa login)
+Route::get('/lapor-penjual', [LaporanPenjualController::class, 'create'])->name('laporan.create');
+Route::post('/lapor-penjual', [LaporanPenjualController::class, 'store'])->name('laporan.store');
+Route::get('/lapor-penjual/get-penjual', [LaporanPenjualController::class, 'getPenjual'])->name('laporan.getPenjual');
 
 // 📄 Halaman Informasi
 Route::view('/kebijakan-privasi', 'pages.kebijakan-privasi')->name('kebijakan-privasi');

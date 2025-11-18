@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Daftarkan middleware alias
+        $middleware->alias([
+            'penjual.status' => \App\Http\Middleware\CheckPenjualStatus::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

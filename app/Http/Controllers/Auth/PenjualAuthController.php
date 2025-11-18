@@ -39,7 +39,16 @@ class PenjualAuthController extends Controller
             return back()->withErrors(['password' => 'Password salah.'])->withInput();
         }
 
-        Auth::guard('penjual')->login($penjual);
+        // ⚠️ VALIDASI STATUS AKUN - Cek apakah akun aktif
+        if ($penjual->isInactive()) {
+            return back()->withErrors([
+                'status' => 'Akun Anda telah dinonaktifkan oleh admin.',
+                'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
+                'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null
+            ])->withInput($request->only('email'));
+        }
+
+        Auth::guard('penjual')->login($penjual, $request->filled('remember'));
         $request->session()->regenerate();
 
         return redirect()->intended(route('penjual.dashboard'))
@@ -89,11 +98,21 @@ class PenjualAuthController extends Controller
                     'google_id' => $googleUser->getId(),
                     'password' => bcrypt(str()->random(16)), // buat password acak
                     'no_hp' => '-', // opsional, bisa diganti nanti
+                    'status' => 'active', // Default aktif untuk pendaftaran baru
                 ]);
             } else {
                 // Update google_id jika belum diset
                 if (empty($penjual->google_id)) {
                     $penjual->update(['google_id' => $googleUser->getId()]);
+                }
+                
+                // ⚠️ VALIDASI STATUS AKUN untuk login Google
+                if ($penjual->isInactive()) {
+                    return redirect()->route('penjual.login')->withErrors([
+                        'status' => 'Akun Anda telah dinonaktifkan oleh admin.',
+                        'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
+                        'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null
+                    ]);
                 }
             }
 
@@ -135,6 +154,7 @@ class PenjualAuthController extends Controller
             'email' => $validated['email'],
             'password' => bcrypt($validated['password']),
             'no_hp' => $validated['no_hp'],
+            'status' => 'active', // Default aktif untuk pendaftaran baru
         ]);
 
         Auth::guard('penjual')->login($penjual);

@@ -7,6 +7,7 @@ use App\Models\Penjual;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
@@ -51,6 +52,83 @@ class AdminPenjualController extends Controller
     }
 
     /**
+     * Toggle status penjual (Aktif/Nonaktif)
+     */
+    public function toggleStatus(Request $request, $id)
+    {
+        $penjual = Penjual::findOrFail($id);
+        $admin = Auth::guard('admin')->user();
+        
+        if ($penjual->isActive()) {
+            // Nonaktifkan penjual
+            $reason = $request->input('reason', 'Dinonaktifkan oleh admin');
+            $penjual->deactivate($reason, $admin->id);
+            
+            $message = "Penjual {$penjual->username} berhasil dinonaktifkan.";
+            $type = 'warning';
+        } else {
+            // Aktifkan penjual
+            $penjual->activate();
+            
+            $message = "Penjual {$penjual->username} berhasil diaktifkan kembali.";
+            $type = 'success';
+        }
+        
+        return back()->with($type, $message);
+    }
+
+    /**
+     * Form deaktivasi dengan alasan
+     */
+    public function showDeactivateForm($id)
+    {
+        $penjual = Penjual::findOrFail($id);
+        
+        if ($penjual->isInactive()) {
+            return back()->with('info', 'Penjual sudah dalam status nonaktif.');
+        }
+        
+        return view('admin.penjual.deactivate', compact('penjual'));
+    }
+
+    /**
+     * Proses deaktivasi dengan alasan
+     */
+    public function deactivate(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:500'
+        ], [
+            'reason.required' => 'Alasan deaktivasi wajib diisi',
+            'reason.max' => 'Alasan maksimal 500 karakter'
+        ]);
+        
+        $penjual = Penjual::findOrFail($id);
+        $admin = Auth::guard('admin')->user();
+        
+        $penjual->deactivate($request->reason, $admin->id);
+        
+        return redirect()->route('admin.penjual.index')
+            ->with('success', "Penjual {$penjual->username} berhasil dinonaktifkan.");
+    }
+
+    /**
+     * Aktifkan penjual
+     */
+    public function activate($id)
+    {
+        $penjual = Penjual::findOrFail($id);
+        
+        if ($penjual->isActive()) {
+            return back()->with('info', 'Penjual sudah dalam status aktif.');
+        }
+        
+        $penjual->activate();
+        
+        return back()->with('success', "Penjual {$penjual->username} berhasil diaktifkan kembali.");
+    }
+
+    /**
      * Halaman monitoring detail penjual
      */
     public function monitoring($id)
@@ -89,13 +167,14 @@ class AdminPenjualController extends Controller
             ->whereIn('produks.toko_id', $tokoIds)
             ->count();
         
-        // Total Pendapatan (jika ada kolom total di pesanan)
+        // Total Pendapatan
         $totalPendapatan = DB::table('pesanans')
             ->join('produks', 'pesanans.produk_id', '=', 'produks.id')
             ->whereIn('produks.toko_id', $tokoIds)
-            ->sum(DB::raw('pesanans.jumlah * produks.harga'));
+            ->where('pesanans.status', 'selesai')
+            ->sum('pesanans.total_harga');
         
-        // Daftar Produk (dengan info toko dan kategori)
+        // Daftar Produk
         $produks = DB::table('produks')
             ->join('tokos', 'produks.toko_id', '=', 'tokos.id')
             ->join('kategoris', 'produks.kategori_id', '=', 'kategoris.id')
@@ -149,8 +228,7 @@ class AdminPenjualController extends Controller
                 'pesanans.*',
                 'produks.nama as nama_produk',
                 'produks.harga',
-                'tokos.nama_toko',
-                DB::raw('(pesanans.jumlah * produks.harga) as total_harga')
+                'tokos.nama_toko'
             )
             ->orderByDesc('pesanans.tanggal_pemesanan')
             ->limit(10)
@@ -197,6 +275,7 @@ class AdminPenjualController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'no_hp' => $validated['no_hp'] ?? null,
+            'status' => 'active', // Default aktif
         ]);
 
         return redirect()->route('admin.penjual.index')->with('success', 'Penjual berhasil ditambahkan.');
