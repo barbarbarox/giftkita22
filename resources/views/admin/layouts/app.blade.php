@@ -318,7 +318,7 @@
 
                 {{-- Page Title --}}
                 <h2 class="text-xl md:text-2xl font-bold text-gray-800 hidden md:block">
-                    @yield('page-title', 'Dashboard')
+                    @yield('page-title', 'Hi Admin, Apo Kabo?')
                 </h2>
 
                 {{-- Right Actions --}}

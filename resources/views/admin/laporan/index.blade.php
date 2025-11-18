@@ -11,10 +11,7 @@
             <h1 class="text-3xl font-bold text-gray-900 mb-2">📋 Kelola Laporan Penjual</h1>
             <p class="text-gray-600">Monitor dan tinjau laporan yang masuk dari pembeli</p>
         </div>
-        <a href="{{ route('admin.laporan.statistik') }}" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center gap-2">
-            <i class='bx bx-bar-chart-alt-2'></i>
-            Lihat Statistik
-        </a>
+
     </div>
 
     <!-- Success Message -->
