@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>GiftKita — 404 Halaman Tidak Ditemukan</title>
+    <title>GiftKita — 500 Kesalahan Server</title>
     <style>
         body, html { margin: 0; padding: 0; background: #fdf7fb; font-family: 'Montserrat', sans-serif;}
         .error-container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 2rem;}
@@ -47,7 +47,7 @@
         <div class="ribbon-vert"></div>
         <div class="ribbon-horiz"></div>
         <div class="giftbox-inner">
-            <span class="giftbox-label">404</span>
+            <span class="giftbox-label">500</span>
         </div>
         <div class="flower">
             <div class="petal top"></div>
@@ -56,8 +56,8 @@
             <div class="petal middle"></div>
         </div>
     </div>
-    <h2>Halaman Tidak Ditemukan</h2>
-    <p>Maaf, halaman yang Anda cari tidak tersedia.</p>
+    <h2>Kesalahan Server</h2>
+    <p>Terjadi kesalahan internal server. Mohon coba beberapa saat lagi.</p>
     <a href="{{ url('/') }}" class="btn">Kembali ke Beranda</a>
 </div>
 </body>

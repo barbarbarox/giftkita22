@@ -96,7 +96,7 @@ class PenjualAuthController extends Controller
     }
 
     /**
-     * 🚪 Logout penjual.
+     * 🚪 Logout penjual - IMPROVED VERSION with Cookie Clearing.
      */
     public function logout(Request $request)
     {
@@ -110,22 +110,19 @@ class PenjualAuthController extends Controller
             'is_authenticated' => Auth::guard('penjual')->check(),
         ]);
 
-        // 🔥 CRITICAL: Forget remember token
+        // 🔥 STEP 1: Forget remember token di database
         if ($penjual) {
             $penjual->setRememberToken(null);
             $penjual->save();
         }
 
-        // 🔥 CRITICAL: Logout dari guard penjual
+        // 🔥 STEP 2: Logout dari guard penjual
         Auth::guard('penjual')->logout();
         
-        // 🔥 CRITICAL: Flush semua session data
-        $request->session()->flush();
-        
-        // 🔥 CRITICAL: Invalidate session
+        // 🔥 STEP 3: Invalidate session SEBELUM flush
         $request->session()->invalidate();
         
-        // 🔥 CRITICAL: Regenerate CSRF token
+        // 🔥 STEP 4: Regenerate CSRF token
         $request->session()->regenerateToken();
 
         Log::debug('Logout - After', [
@@ -139,8 +136,23 @@ class PenjualAuthController extends Controller
             'ip' => $request->ip()
         ]);
 
-        return redirect()->route('penjual.login')
+        // 🔥 STEP 5: Buat response dengan cookie clearing
+        $response = redirect()->route('penjual.login')
             ->with('status', 'Anda telah berhasil logout.');
+
+        // 🔥 STEP 6: Expire semua cookies terkait authentication
+        $cookiesToClear = [
+            'laravel_session',
+            'remember_penjual',
+            'XSRF-TOKEN',
+            session()->getName(), // Dynamic session cookie name
+        ];
+
+        foreach ($cookiesToClear as $cookieName) {
+            $response->withCookie(cookie()->forget($cookieName));
+        }
+
+        return $response;
     }
 
     /**

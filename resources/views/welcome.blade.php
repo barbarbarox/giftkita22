@@ -284,9 +284,6 @@
                 <a href="/penjual/register" class="bg-white text-[#c771d4] px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition shadow-lg hover:scale-105">
                     Daftar Sebagai Penjual
                 </a>
-                <a href="#tentang" class="bg-transparent border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white hover:text-[#c771d4] transition">
-                    Pelajari Lebih Lanjut
-                </a>
             </div>
         </div>
     </section>

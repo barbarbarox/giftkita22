@@ -173,7 +173,7 @@
 
     <!-- Info Section -->
     <div class="info-section">
-        <h3>ℹInformasi Laporan</h3>
+        <h3>Informasi Laporan</h3>
         <p>Laporan ini berisi ringkasan statistik penjualan untuk periode yang dipilih, termasuk data pendapatan, pesanan, produk terlaris, dan performa per toko.</p>
     </div>
 

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'GiftKita')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link rel="icon" href="{{ asset('images/GiftKita.png') }}" type="image/png">
+    <link rel="icon" type="image/png" href="{{ asset('images/GiftKita.png') }}">
 </head>
 
 <body id="body" class="bg-white text-gray-800 flex flex-col min-h-screen overflow-x-hidden relative">

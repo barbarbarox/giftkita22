@@ -29,6 +29,13 @@ class PesananPublikController extends Controller
                 'longitude' => 'nullable|string|max:20',
             ]);
 
+            // 🔍 DEBUG: Log data yang diterima
+            Log::info('Data pesanan diterima:', [
+                'latitude' => $validated['latitude'] ?? 'null',
+                'longitude' => $validated['longitude'] ?? 'null',
+                'google_map_link' => $validated['google_map_link'] ?? 'null',
+            ]);
+
             // ✅ 2. Ambil data produk untuk generate WhatsApp link
             $produk = Produk::with('toko')->findOrFail($validated['produk_id']);
             $toko = $produk->toko;
@@ -47,6 +54,14 @@ class PesananPublikController extends Controller
                 'jumlah' => 1, // Default 1 karena tidak ada input jumlah
                 'tanggal_pemesanan' => Carbon::now(),
                 'status' => 'pending',
+            ]);
+
+            // 🔍 DEBUG: Konfirmasi data tersimpan
+            Log::info('Pesanan berhasil disimpan:', [
+                'pesanan_id' => $pesanan->id,
+                'latitude_saved' => $pesanan->latitude,
+                'longitude_saved' => $pesanan->longitude,
+                'google_map_link_saved' => $pesanan->google_map_link,
             ]);
 
             // ✅ 4. Generate WhatsApp link
@@ -72,10 +87,17 @@ class PesananPublikController extends Controller
                 'success' => true,
                 'message' => 'Pesanan berhasil dikirim!',
                 'whatsapp_url' => $whatsappUrl,
+                'debug' => config('app.debug') ? [
+                    'latitude' => $pesanan->latitude,
+                    'longitude' => $pesanan->longitude,
+                    'google_map_link' => $pesanan->google_map_link,
+                ] : null,
             ], 200);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             // ⚠️ Error validasi
+            Log::warning('Validasi pesanan gagal:', $e->errors());
+            
             return response()->json([
                 'success' => false,
                 'message' => 'Validasi gagal.',
@@ -84,7 +106,9 @@ class PesananPublikController extends Controller
 
         } catch (\Exception $e) {
             // ⚠️ Error umum
-            Log::error('Gagal menyimpan pesanan: ' . $e->getMessage());
+            Log::error('Gagal menyimpan pesanan: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'success' => false,
@@ -116,10 +140,12 @@ class PesananPublikController extends Controller
         $message .= "\n📍 *Alamat Pengiriman:*\n";
         $message .= $pesanan->alamat_pembeli . "\n";
         
-        // Tambahkan link Google Maps jika ada
+        // Tambahkan link Google Maps dengan prioritas:
+        // 1. Jika ada google_map_link, gunakan itu
+        // 2. Jika ada latitude & longitude, generate link
         if ($pesanan->google_map_link) {
             $message .= "\n🗺️ Lokasi Maps: " . $pesanan->google_map_link . "\n";
-        } elseif ($pesanan->hasLocation()) {
+        } elseif ($pesanan->latitude && $pesanan->longitude) {
             $message .= "\n🗺️ Lokasi Maps: https://www.google.com/maps?q={$pesanan->latitude},{$pesanan->longitude}\n";
         }
         

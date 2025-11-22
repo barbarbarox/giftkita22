@@ -12,7 +12,7 @@
 
     <!-- Filter Section -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <form method="GET" action="{{ route('penjual.statistik') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form method="GET" action="{{ route('penjual.statistik.index') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <!-- Filter Toko -->
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">

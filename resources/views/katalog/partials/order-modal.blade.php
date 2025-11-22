@@ -203,8 +203,23 @@
     }
 }
 
+@keyframes fade-in {
+    from { 
+        opacity: 0; 
+        transform: translateY(-10px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
 .animate-scale-in {
     animation: scale-in 0.3s ease-out;
+}
+
+.animate-fade-in {
+    animation: fade-in 0.3s ease-out;
 }
 
 #orderModal {
@@ -234,14 +249,30 @@ function closeOrderModal() {
     document.getElementById('linkInput').classList.add('hidden');
     document.getElementById('mapPicker').classList.add('hidden');
     document.getElementById('coordinateInfo').classList.add('hidden');
+    
+    // Reset location data
+    document.getElementById('latitude').value = '';
+    document.getElementById('longitude').value = '';
+    document.getElementById('google_map_link').value = '';
+    
+    // Uncheck all radio buttons
+    document.querySelectorAll('input[name="location_method"]').forEach(radio => {
+        radio.checked = false;
+    });
 }
 
 // Location Method Change
 document.querySelectorAll('input[name="location_method"]').forEach(radio => {
     radio.addEventListener('change', function() {
-        // Hide all
+        // Hide all & reset coordinate info
         document.getElementById('linkInput').classList.add('hidden');
         document.getElementById('mapPicker').classList.add('hidden');
+        document.getElementById('coordinateInfo').classList.add('hidden');
+        
+        // Reset values
+        document.getElementById('latitude').value = '';
+        document.getElementById('longitude').value = '';
+        document.getElementById('google_map_link').value = '';
         
         if (this.value === 'link') {
             document.getElementById('linkInput').classList.remove('hidden');
@@ -282,32 +313,106 @@ function placeMarker(lat, lng) {
     marker = L.marker([lat, lng]).addTo(map);
     map.setView([lat, lng], 15);
     
+    // Set koordinat
     document.getElementById('latitude').value = lat.toFixed(7);
     document.getElementById('longitude').value = lng.toFixed(7);
+    
+    // 🔥 PENTING: Generate Google Maps link otomatis untuk peta picker
+    const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+    document.getElementById('google_map_link').value = googleMapsLink;
     
     showCoordinateInfo(lat, lng);
 }
 
-// Get User Location (GPS)
+// Get User Location (GPS) - UPDATED VERSION
 function getUserLocation() {
     if (!navigator.geolocation) {
         alert('Browser Anda tidak mendukung geolocation');
+        // Reset radio button
+        document.querySelectorAll('input[name="location_method"]').forEach(radio => {
+            radio.checked = false;
+        });
         return;
     }
+    
+    // Tampilkan loading indicator
+    const loadingMsg = document.createElement('div');
+    loadingMsg.id = 'gpsLoading';
+    loadingMsg.className = 'fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in';
+    loadingMsg.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Mengambil lokasi...';
+    document.body.appendChild(loadingMsg);
     
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const lat = position.coords.latitude;
             const lng = position.coords.longitude;
             
+            // Set koordinat ke hidden input
             document.getElementById('latitude').value = lat.toFixed(7);
             document.getElementById('longitude').value = lng.toFixed(7);
             
+            // 🔥 KUNCI PERBAIKAN: Generate Google Maps link otomatis dari GPS
+            const googleMapsLink = `https://www.google.com/maps?q=${lat},${lng}`;
+            document.getElementById('google_map_link').value = googleMapsLink;
+            
+            console.log('✅ GPS Data:', {
+                latitude: lat.toFixed(7),
+                longitude: lng.toFixed(7),
+                google_map_link: googleMapsLink
+            });
+            
+            // Tampilkan info koordinat
             showCoordinateInfo(lat, lng);
-            alert('✅ Lokasi berhasil diambil!');
+            
+            // Hapus loading & tampilkan sukses
+            document.getElementById('gpsLoading').remove();
+            
+            // Tampilkan notifikasi sukses
+            const successMsg = document.createElement('div');
+            successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 animate-fade-in';
+            successMsg.innerHTML = `
+                <div class="flex items-center gap-2">
+                    <i class="bx bx-check-circle text-2xl"></i>
+                    <div>
+                        <p class="font-bold">Lokasi berhasil diambil!</p>
+                        <p class="text-xs">Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}</p>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(successMsg);
+            
+            setTimeout(() => successMsg.remove(), 3000);
         },
         function(error) {
-            alert('❌ Gagal mengambil lokasi: ' + error.message);
+            // Hapus loading
+            document.getElementById('gpsLoading')?.remove();
+            
+            let errorMessage = 'Gagal mengambil lokasi';
+            
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMessage = 'Akses lokasi ditolak. Mohon izinkan akses lokasi di browser Anda.';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMessage = 'Informasi lokasi tidak tersedia. Pastikan GPS aktif.';
+                    break;
+                case error.TIMEOUT:
+                    errorMessage = 'Waktu pengambilan lokasi habis. Silakan coba lagi.';
+                    break;
+            }
+            
+            console.error('❌ GPS Error:', error);
+            alert('❌ ' + errorMessage);
+            
+            // Reset pilihan radio button
+            document.querySelectorAll('input[name="location_method"]').forEach(radio => {
+                radio.checked = false;
+            });
+        },
+        {
+            enableHighAccuracy: true,  // Aktifkan akurasi tinggi
+            timeout: 10000,            // Timeout 10 detik
+            maximumAge: 0              // Jangan gunakan cache lokasi lama
         }
     );
 }
@@ -326,28 +431,60 @@ document.getElementById('google_map_link')?.addEventListener('blur', function() 
     const url = this.value.trim();
     if (!url) return;
     
+    // Pattern untuk extract koordinat dari berbagai format Google Maps URL
     const patterns = [
-        /@(-?\d+\.\d+),(-?\d+\.\d+)/,
-        /q=(-?\d+\.\d+),(-?\d+\.\d+)/,
+        /@(-?\d+\.\d+),(-?\d+\.\d+)/,           // Format: @lat,lng
+        /q=(-?\d+\.\d+),(-?\d+\.\d+)/,          // Format: ?q=lat,lng
+        /!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/,       // Format: !3dlat!4dlng
     ];
     
     for (const pattern of patterns) {
         const match = url.match(pattern);
         if (match) {
-            document.getElementById('latitude').value = match[1];
-            document.getElementById('longitude').value = match[2];
-            showCoordinateInfo(match[1], match[2]);
+            const lat = match[1];
+            const lng = match[2];
+            
+            document.getElementById('latitude').value = lat;
+            document.getElementById('longitude').value = lng;
+            
+            console.log('✅ Link Maps Data:', { latitude: lat, longitude: lng });
+            
+            showCoordinateInfo(lat, lng);
             break;
         }
     }
 });
 
-// Form Submit
+// Form Submit - WITH VALIDATION
 document.getElementById('orderForm').addEventListener('submit', function(e) {
     e.preventDefault();
     
+    // 🔥 VALIDASI: Cek apakah lokasi sudah dipilih
+    const locationMethod = document.querySelector('input[name="location_method"]:checked');
+    
+    if (!locationMethod) {
+        alert('⚠️ Silakan pilih metode lokasi terlebih dahulu!');
+        return;
+    }
+    
+    // Cek apakah koordinat sudah terisi
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    
+    if (!lat || !lng) {
+        alert('⚠️ Lokasi belum dipilih! Silakan pilih lokasi Anda.');
+        return;
+    }
+    
     const formData = new FormData(this);
     const submitBtn = this.querySelector('button[type="submit"]');
+    
+    // Debug: Log data yang akan dikirim
+    console.log('📤 Data yang dikirim:', {
+        latitude: formData.get('latitude'),
+        longitude: formData.get('longitude'),
+        google_map_link: formData.get('google_map_link'),
+    });
     
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin text-2xl"></i> Memproses...';
@@ -362,6 +499,8 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('📥 Response:', data);
+        
         if (data.success) {
             // Redirect to WhatsApp
             window.location.href = data.whatsapp_url;
@@ -372,7 +511,7 @@ document.getElementById('orderForm').addEventListener('submit', function(e) {
         }
     })
     .catch(error => {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         alert('❌ Terjadi kesalahan. Silakan coba lagi.');
         submitBtn.disabled = false;
         submitBtn.innerHTML = '<i class="bx bxl-whatsapp text-2xl"></i> Lanjut ke WhatsApp';
