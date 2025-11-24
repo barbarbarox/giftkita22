@@ -3,20 +3,12 @@
   "builds": [
     {
       "src": "api/index.php",
-      "use": "@vercel/php"
-    },
-    {
-      "src": "public/build/**",
-      "use": "@vercel/static"
+      "use": "vercel-php@0.7.4"
     }
   ],
   "routes": [
     {
-      "src": "/build/(.*)",
-      "dest": "public/build/$1"
-    },
-    {
-      "src": "/(css|js|images|fonts|storage)/(.*)",
+      "src": "/(css|js|images|fonts|storage|build)/(.*)",
       "dest": "public/$1/$2"
     },
     {
@@ -35,7 +27,6 @@
     "VIEW_COMPILED_PATH": "/tmp",
     "CACHE_DRIVER": "array",
     "LOG_CHANNEL": "stderr",
-    "SESSION_DRIVER": "database",
-    "FILESYSTEM_DISK": "public"
+    "SESSION_DRIVER": "database"
   }
 }
