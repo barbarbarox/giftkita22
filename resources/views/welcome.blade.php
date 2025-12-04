@@ -220,7 +220,6 @@
         <div class="max-w-7xl mx-auto px-4 text-center">
             <h2 class="text-3xl font-bold mb-4 text-[#007daf]">Produk Pilihan</h2>
             <p class="text-gray-600 mb-12">Koleksi terbaik dari para penjual terpercaya kami</p>
-
             @if ($produks->isEmpty())
                 <div class="py-16">
                     <div class="text-6xl mb-4">🎁</div>

@@ -5,8 +5,8 @@
     {{-- Header --}}
     <div class="mb-6">
         <div class="flex items-center gap-3 mb-2">
-            <a href="{{ route('admin.penjual.index') }}" 
-               class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <a href="{{ route('admin.penjual.index') }}"
+                class="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -15,7 +15,7 @@
                 <h1 class="text-3xl font-bold text-gray-800">Monitoring Penjual</h1>
                 <p class="text-gray-600 mt-1">{{ $penjual->username }} ({{ $penjual->email }})</p>
             </div>
-            
+
             {{-- Status Toggle Section --}}
             <div class="bg-white rounded-xl shadow-lg p-4 border-2 {{ $penjual->isActive() ? 'border-green-200' : 'border-red-200' }}">
                 <div class="flex items-center gap-4">
@@ -25,18 +25,18 @@
                             {{ $penjual->isActive() ? 'Aktif' : 'Nonaktif' }}
                         </p>
                     </div>
-                    
+
                     {{-- Toggle Switch --}}
                     <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" 
-                               class="sr-only peer" 
-                               id="statusToggle"
-                               {{ $penjual->isActive() ? 'checked' : '' }}
-                               onchange="toggleStatus(this)">
+                        <input type="checkbox"
+                            class="sr-only peer"
+                            id="statusToggle"
+                            {{ $penjual->isActive() ? 'checked' : '' }}
+                            onchange="toggleStatus(this)">
                         <div class="w-14 h-8 bg-red-400 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-green-500"></div>
                     </label>
                 </div>
-                
+
                 {{-- Info deaktivasi jika nonaktif --}}
                 @if($penjual->isInactive() && $penjual->deactivated_at)
                 <div class="mt-3 pt-3 border-t border-gray-200">
@@ -59,13 +59,13 @@
     <div class="mb-6 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg flex items-center justify-between">
         <div class="flex items-center">
             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
             <span>{{ session('success') }}</span>
         </div>
         <button onclick="this.parentElement.remove()" class="text-green-700 hover:text-green-900">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
         </button>
     </div>
@@ -75,13 +75,13 @@
     <div class="mb-6 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg flex items-center justify-between">
         <div class="flex items-center">
             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
             </svg>
             <span>{{ session('warning') }}</span>
         </div>
         <button onclick="this.parentElement.remove()" class="text-yellow-700 hover:text-yellow-900">
             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
             </svg>
         </button>
     </div>
@@ -171,21 +171,35 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             @forelse($tokos as $toko)
             <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl transition-shadow duration-300">
+                {{-- Header dengan gradient background --}}
                 <div class="h-32 bg-gradient-to-r from-blue-400 to-purple-500 relative">
-                    @if($toko->foto_profil)
-                    <img src="{{ asset('storage/' . $toko->foto_profil) }}" class="w-20 h-20 rounded-full border-4 border-white absolute bottom-0 left-6 transform translate-y-1/2" alt="{{ $toko->nama_toko }}">
-                    @else
-                    <div class="w-20 h-20 bg-gray-300 rounded-full border-4 border-white absolute bottom-0 left-6 transform translate-y-1/2 flex items-center justify-center">
-                        <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
+                    {{-- Foto Profil Toko --}}
+                    <div class="absolute bottom-0 left-6 transform translate-y-1/2">
+                        @if($toko->foto_profil)
+                        <img src="{{ Storage::url($toko->foto_profil) }}"
+                            class="w-20 h-20 rounded-full border-4 border-white object-cover shadow-lg"
+                            alt="{{ $toko->nama_toko }}"
+                            onerror="this.onerror=null; this.src='{{ asset('images/default-store.png')}}'; this.parentElement.querySelector('.fallback-icon')?.classList.remove('hidden');">
+                        <div class="fallback-icon hidden w-20 h-20 bg-gray-300 rounded-full border-4 border-white absolute top-0 left-0 flex items-center justify-center">
+                            <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        @else
+                        <div class="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full border-4 border-white flex items-center justify-center shadow-lg">
+                            <svg class="w-10 h-10 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        @endif
                     </div>
-                    @endif
                 </div>
+
+                {{-- Konten Card --}}
                 <div class="pt-12 p-6">
                     <h3 class="text-xl font-bold text-gray-800 mb-2">{{ $toko->nama_toko }}</h3>
                     <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ $toko->deskripsi ?? 'Tidak ada deskripsi' }}</p>
-                    
+
                     <div class="flex items-center justify-between mb-4">
                         <div class="text-center">
                             <p class="text-2xl font-bold text-blue-600">{{ $toko->jumlah_produk }}</p>
@@ -210,11 +224,17 @@
                     <div class="flex gap-2">
                         @if($toko->whatsapp)
                         <a href="https://wa.me/{{ $toko->whatsapp }}" target="_blank" class="flex-1 text-center py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-medium transition-colors">
+                            <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+                            </svg>
                             WhatsApp
                         </a>
                         @endif
                         @if($toko->instagram)
                         <a href="{{ $toko->instagram }}" target="_blank" class="flex-1 text-center py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg text-sm font-medium transition-colors">
+                            <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                            </svg>
                             Instagram
                         </a>
                         @endif
@@ -223,7 +243,11 @@
             </div>
             @empty
             <div class="col-span-3 text-center py-12">
-                <p class="text-gray-500">Penjual ini belum memiliki toko</p>
+                <svg class="w-20 h-20 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <p class="text-gray-500 text-lg font-medium">Penjual ini belum memiliki toko</p>
+                <p class="text-gray-400 text-sm mt-1">Toko akan muncul setelah penjual mendaftarkan tokonya</p>
             </div>
             @endforelse
         </div>
@@ -350,17 +374,17 @@
                             </td>
                             <td class="px-6 py-4 text-center">
                                 @if($pesanan->status == 'pending')
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                                        Pending
-                                    </span>
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
                                 @elseif($pesanan->status == 'diproses')
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                                        Diproses
-                                    </span>
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                                    Diproses
+                                </span>
                                 @else
-                                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                                        Selesai
-                                    </span>
+                                <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                                    Selesai
+                                </span>
                                 @endif
                             </td>
                         </tr>
@@ -384,41 +408,40 @@
         <div class="flex items-center gap-3 mb-4">
             <div class="bg-red-100 p-3 rounded-full">
                 <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800">Nonaktifkan Penjual</h3>
         </div>
-        
+
         <form id="deactivateForm" method="POST" action="{{ route('admin.penjual.toggleStatus', $penjual->id) }}">
             @csrf
             <p class="text-gray-600 mb-4">
                 Anda yakin ingin menonaktifkan akun <strong>{{ $penjual->username }}</strong>?
                 Penjual tidak akan bisa login dan semua toko mereka akan dibekukan.
             </p>
-            
+
             <div class="mb-4">
                 <label for="reason" class="block text-sm font-medium text-gray-700 mb-2">
                     Alasan Deaktivasi <span class="text-red-500">*</span>
                 </label>
-                <textarea 
-                    id="reason" 
-                    name="reason" 
-                    rows="3" 
+                <textarea
+                    id="reason"
+                    name="reason"
+                    rows="3"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                     placeholder="Masukkan alasan deaktivasi..."
-                    required
-                ></textarea>
+                    required></textarea>
             </div>
-            
+
             <div class="flex gap-3">
-                <button type="button" 
-                        onclick="closeDeactivateModal()" 
-                        class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                <button type="button"
+                    onclick="closeDeactivateModal()"
+                    class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
                     Batal
                 </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors">
                     Nonaktifkan
                 </button>
             </div>
@@ -432,27 +455,27 @@
         <div class="flex items-center gap-3 mb-4">
             <div class="bg-green-100 p-3 rounded-full">
                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800">Aktifkan Penjual</h3>
         </div>
-        
+
         <form method="POST" action="{{ route('admin.penjual.toggleStatus', $penjual->id) }}">
             @csrf
             <p class="text-gray-600 mb-6">
                 Anda yakin ingin mengaktifkan kembali akun <strong>{{ $penjual->username }}</strong>?
                 Penjual akan bisa login dan mengelola toko mereka kembali.
             </p>
-            
+
             <div class="flex gap-3">
-                <button type="button" 
-                        onclick="closeActivateModal()" 
-                        class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
+                <button type="button"
+                    onclick="closeActivateModal()"
+                    class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg font-medium transition-colors">
                     Batal
                 </button>
-                <button type="submit" 
-                        class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
+                <button type="submit"
+                    class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors">
                     Aktifkan
                 </button>
             </div>
@@ -463,147 +486,147 @@
 {{-- Chart.js --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-// Tab Switching
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        // Remove active dari semua tab
-        document.querySelectorAll('.tab-btn').forEach(b => {
-            b.classList.remove('active', 'border-blue-500', 'text-blue-600');
-            b.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+    // Tab Switching
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Remove active dari semua tab
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                b.classList.remove('active', 'border-blue-500', 'text-blue-600');
+                b.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+            });
+
+            // Add active ke tab yang diklik
+            this.classList.add('active', 'border-blue-500', 'text-blue-600');
+            this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+
+            // Hide semua content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Show content yang sesuai
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(tabId).classList.remove('hidden');
         });
-        
-        // Add active ke tab yang diklik
-        this.classList.add('active', 'border-blue-500', 'text-blue-600');
-        this.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-        
-        // Hide semua content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.add('hidden');
-        });
-        
-        // Show content yang sesuai
-        const tabId = this.getAttribute('data-tab');
-        document.getElementById(tabId).classList.remove('hidden');
     });
-});
 
-// Style default untuk tab
-document.querySelectorAll('.tab-btn').forEach(btn => {
-    if (!btn.classList.contains('active')) {
-        btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-    } else {
-        btn.classList.add('border-blue-500', 'text-blue-600');
+    // Style default untuk tab
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (!btn.classList.contains('active')) {
+            btn.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
+        } else {
+            btn.classList.add('border-blue-500', 'text-blue-600');
+        }
+    });
+
+    // Toggle Status Function
+    function toggleStatus(checkbox) {
+        const isActive = checkbox.checked;
+
+        if (isActive) {
+            // Tampilkan modal aktivasi
+            document.getElementById('activateModal').classList.remove('hidden');
+        } else {
+            // Tampilkan modal deaktivasi
+            document.getElementById('deactivateModal').classList.remove('hidden');
+        }
+
+        // Reset checkbox ke state sebelumnya (akan diubah setelah submit form)
+        checkbox.checked = !checkbox.checked;
     }
-});
 
-// Toggle Status Function
-function toggleStatus(checkbox) {
-    const isActive = checkbox.checked;
-    
-    if (isActive) {
-        // Tampilkan modal aktivasi
-        document.getElementById('activateModal').classList.remove('hidden');
-    } else {
-        // Tampilkan modal deaktivasi
-        document.getElementById('deactivateModal').classList.remove('hidden');
+    // Close Modal Functions
+    function closeDeactivateModal() {
+        document.getElementById('deactivateModal').classList.add('hidden');
+        document.getElementById('reason').value = '';
     }
-    
-    // Reset checkbox ke state sebelumnya (akan diubah setelah submit form)
-    checkbox.checked = !checkbox.checked;
-}
 
-// Close Modal Functions
-function closeDeactivateModal() {
-    document.getElementById('deactivateModal').classList.add('hidden');
-    document.getElementById('reason').value = '';
-}
-
-function closeActivateModal() {
-    document.getElementById('activateModal').classList.add('hidden');
-}
-
-// Close modal ketika click di luar modal
-document.getElementById('deactivateModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeDeactivateModal();
+    function closeActivateModal() {
+        document.getElementById('activateModal').classList.add('hidden');
     }
-});
 
-document.getElementById('activateModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeActivateModal();
-    }
-});
+    // Close modal ketika click di luar modal
+    document.getElementById('deactivateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeDeactivateModal();
+        }
+    });
 
-// Chart
-const ctx = document.getElementById('salesChart');
-if (ctx) {
-    const chartLabels = <?php echo json_encode($chartLabels); ?>;
-    const chartData = <?php echo json_encode($chartData); ?>;
-    
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: chartLabels,
-            datasets: [{
-                label: 'Jumlah Pesanan',
-                data: chartData,
-                borderColor: 'rgb(59, 130, 246)',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6,
-                pointBackgroundColor: 'rgb(59, 130, 246)',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            aspectRatio: 2,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14
-                    },
-                    bodyFont: {
-                        size: 13
-                    }
-                }
+    document.getElementById('activateModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeActivateModal();
+        }
+    });
+
+    // Chart
+    const ctx = document.getElementById('salesChart');
+    if (ctx) {
+        const chartLabels = <?php echo json_encode($chartLabels); ?>;
+        const chartData = <?php echo json_encode($chartData); ?>;
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartLabels,
+                datasets: [{
+                    label: 'Jumlah Pesanan',
+                    data: chartData,
+                    borderColor: 'rgb(59, 130, 246)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: 'rgb(59, 130, 246)',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        precision: 0,
-                        font: {
-                            size: 11
-                        }
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        display: false
                     },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14
+                        },
+                        bodyFont: {
+                            size: 13
+                        }
                     }
                 },
-                x: {
-                    ticks: {
-                        font: {
-                            size: 11
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
                         }
                     },
-                    grid: {
-                        display: false
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }
-        }
-    });
-}
+        });
+    }
 </script>
 @endsection

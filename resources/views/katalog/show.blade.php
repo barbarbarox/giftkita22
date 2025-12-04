@@ -17,46 +17,64 @@
         {{-- Main Content --}}
         <div class="grid md:grid-cols-2 gap-8">
             
-            {{-- Left: Product Images Gallery --}}
+            {{-- Left: Product Images/Videos Gallery --}}
             <div class="animate-fade-in space-y-6">
-                {{-- Main Image Display --}}
+                {{-- Main Media Display --}}
                 <div class="bg-white rounded-3xl shadow-xl overflow-hidden border-2 border-gray-100">
-                    <div id="mainImageContainer" class="relative h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
+                    <div id="mainMediaContainer" class="relative h-[500px] bg-gradient-to-br from-gray-50 to-gray-100">
                         @php
-                            $firstImage = $produk->files->first();
+                            $firstFile = $produk->files->first();
                         @endphp
                         
-                        @if($firstImage)
-                            <img 
-                                id="mainImage"
-                                src="{{ asset('storage/' . $firstImage->filepath) }}" 
-                                alt="{{ $produk->nama }}"
-                                class="w-full h-full object-contain transition-all duration-500"
-                            >
+                        @if($firstFile)
+                            @php
+                                $extension = strtolower(pathinfo($firstFile->filepath, PATHINFO_EXTENSION));
+                                $isVideo = in_array($extension, ['mp4', 'webm', 'ogg', 'mov', 'avi']);
+                            @endphp
+                            
+                            @if($isVideo)
+                                <video 
+                                    id="mainMedia"
+                                    src="{{ asset('storage/' . $firstFile->filepath) }}" 
+                                    class="w-full h-full object-contain"
+                                    controls
+                                    controlsList="nodownload"
+                                    preload="metadata"
+                                >
+                                    Browser Anda tidak mendukung video HTML5.
+                                </video>
+                            @else
+                                <img 
+                                    id="mainMedia"
+                                    src="{{ asset('storage/' . $firstFile->filepath) }}" 
+                                    alt="{{ $produk->nama }}"
+                                    class="w-full h-full object-contain transition-all duration-500"
+                                >
+                            @endif
                         @else
                             <div class="w-full h-full flex items-center justify-center">
                                 <i class='bx bx-image text-gray-400 text-8xl'></i>
                             </div>
                         @endif
 
-                        {{-- Navigation Arrows (if multiple images) --}}
+                        {{-- Navigation Arrows (if multiple files) --}}
                         @if($produk->files->count() > 1)
                             <button 
-                                onclick="previousImage()"
-                                class="absolute left-4 top-1/2 -translate-y-1/2 bg-[#007daf] hover:bg-[#006b9c] text-white rounded-full p-3 transition-all duration-300 hover:scale-110 shadow-lg"
+                                onclick="previousMedia()"
+                                class="absolute left-4 top-1/2 -translate-y-1/2 bg-[#007daf] hover:bg-[#006b9c] text-white rounded-full p-3 transition-all duration-300 hover:scale-110 shadow-lg z-10"
                             >
                                 <i class='bx bx-chevron-left text-2xl'></i>
                             </button>
                             <button 
-                                onclick="nextImage()"
-                                class="absolute right-4 top-1/2 -translate-y-1/2 bg-[#007daf] hover:bg-[#006b9c] text-white rounded-full p-3 transition-all duration-300 hover:scale-110 shadow-lg"
+                                onclick="nextMedia()"
+                                class="absolute right-4 top-1/2 -translate-y-1/2 bg-[#007daf] hover:bg-[#006b9c] text-white rounded-full p-3 transition-all duration-300 hover:scale-110 shadow-lg z-10"
                             >
                                 <i class='bx bx-chevron-right text-2xl'></i>
                             </button>
                         @endif
 
                         {{-- Category Badge --}}
-                        <div class="absolute top-4 left-4">
+                        <div class="absolute top-4 left-4 z-10">
                             <span class="bg-gradient-to-r from-[#007daf] to-[#0096d9] text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm">
                                 {{ $produk->kategori->nama_kategori ?? 'Umum' }}
                             </span>
@@ -64,7 +82,7 @@
 
                         {{-- Stock Badge --}}
                         @if($produk->stok <= 5)
-                            <div class="absolute top-4 right-4">
+                            <div class="absolute top-4 right-4 z-10">
                                 <span class="bg-red-500 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg backdrop-blur-sm animate-pulse">
                                     Stok: {{ $produk->stok }}
                                 </span>
@@ -76,16 +94,32 @@
                     @if($produk->files->count() > 1)
                         <div class="p-4 bg-gray-50 flex gap-3 overflow-x-auto">
                             @foreach($produk->files as $index => $file)
+                                @php
+                                    $extension = strtolower(pathinfo($file->filepath, PATHINFO_EXTENSION));
+                                    $isVideo = in_array($extension, ['mp4', 'webm', 'ogg', 'mov', 'avi']);
+                                @endphp
+                                
                                 <button 
-                                    onclick="changeMainImage('{{ asset('storage/' . $file->filepath) }}', {{ $index }})"
-                                    class="thumbnail flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 {{ $index === 0 ? 'border-[#007daf]' : 'border-gray-200' }} hover:border-[#007daf] transition-all duration-300 hover:scale-110"
+                                    onclick="changeMainMedia({{ $index }})"
+                                    class="thumbnail relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden border-2 {{ $index === 0 ? 'border-[#007daf]' : 'border-gray-200' }} hover:border-[#007daf] transition-all duration-300 hover:scale-110"
                                     data-index="{{ $index }}"
                                 >
-                                    <img 
-                                        src="{{ asset('storage/' . $file->filepath) }}" 
-                                        alt="Thumbnail {{ $index + 1 }}"
-                                        class="w-full h-full object-cover"
-                                    >
+                                    @if($isVideo)
+                                        <video 
+                                            src="{{ asset('storage/' . $file->filepath) }}" 
+                                            class="w-full h-full object-cover"
+                                            preload="metadata"
+                                        ></video>
+                                        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30">
+                                            <i class='bx bx-play-circle text-white text-3xl'></i>
+                                        </div>
+                                    @else
+                                        <img 
+                                            src="{{ asset('storage/' . $file->filepath) }}" 
+                                            alt="Thumbnail {{ $index + 1 }}"
+                                            class="w-full h-full object-cover"
+                                        >
+                                    @endif
                                 </button>
                             @endforeach
                         </div>
@@ -219,40 +253,103 @@
 
 {{-- Hidden data untuk JavaScript --}}
 <script>
-// Image gallery data
-const images = [
+// Media gallery data
+const mediaFiles = [
     @foreach($produk->files as $file)
-        "{{ asset('storage/' . $file->filepath) }}",
+        @php
+            $extension = strtolower(pathinfo($file->filepath, PATHINFO_EXTENSION));
+            $isVideo = in_array($extension, ['mp4', 'webm', 'ogg', 'mov', 'avi']);
+        @endphp
+        {
+            url: "{{ asset('storage/' . $file->filepath) }}",
+            isVideo: {{ $isVideo ? 'true' : 'false' }}
+        },
     @endforeach
 ];
-let currentImageIndex = 0;
+let currentMediaIndex = 0;
 
-function changeMainImage(imageUrl, index) {
-    const mainImage = document.getElementById('mainImage');
-    if (mainImage) {
-        mainImage.style.opacity = '0';
-        setTimeout(() => {
-            mainImage.src = imageUrl;
-            mainImage.style.opacity = '1';
-            currentImageIndex = index;
-            updateThumbnailBorders();
-        }, 200);
+function changeMainMedia(index) {
+    const container = document.getElementById('mainMediaContainer');
+    const currentMedia = document.getElementById('mainMedia');
+    
+    // Pause video if it's playing
+    if (currentMedia && currentMedia.tagName === 'VIDEO') {
+        currentMedia.pause();
     }
+    
+    // Fade out effect
+    if (currentMedia) {
+        currentMedia.style.opacity = '0';
+    }
+    
+    setTimeout(() => {
+        const mediaData = mediaFiles[index];
+        let newMediaHTML;
+        
+        if (mediaData.isVideo) {
+            newMediaHTML = `
+                <video 
+                    id="mainMedia"
+                    src="${mediaData.url}" 
+                    class="w-full h-full object-contain"
+                    controls
+                    controlsList="nodownload"
+                    preload="metadata"
+                    style="opacity: 0;"
+                >
+                    Browser Anda tidak mendukung video HTML5.
+                </video>
+            `;
+        } else {
+            newMediaHTML = `
+                <img 
+                    id="mainMedia"
+                    src="${mediaData.url}" 
+                    alt="Produk {{ $produk->nama }}"
+                    class="w-full h-full object-contain transition-all duration-500"
+                    style="opacity: 0;"
+                >
+            `;
+        }
+        
+        // Find the media container content area
+        const badges = container.querySelectorAll('.absolute');
+        const buttons = container.querySelectorAll('button');
+        
+        // Clear container but keep badges and buttons
+        Array.from(container.children).forEach(child => {
+            if (!child.classList.contains('absolute') && child.tagName !== 'BUTTON') {
+                child.remove();
+            }
+        });
+        
+        // Insert new media at the beginning
+        container.insertAdjacentHTML('afterbegin', newMediaHTML);
+        
+        // Fade in effect
+        const newMedia = document.getElementById('mainMedia');
+        setTimeout(() => {
+            newMedia.style.opacity = '1';
+        }, 50);
+        
+        currentMediaIndex = index;
+        updateThumbnailBorders();
+    }, 200);
 }
 
-function nextImage() {
-    currentImageIndex = (currentImageIndex + 1) % images.length;
-    changeMainImage(images[currentImageIndex], currentImageIndex);
+function nextMedia() {
+    currentMediaIndex = (currentMediaIndex + 1) % mediaFiles.length;
+    changeMainMedia(currentMediaIndex);
 }
 
-function previousImage() {
-    currentImageIndex = (currentImageIndex - 1 + images.length) % images.length;
-    changeMainImage(images[currentImageIndex], currentImageIndex);
+function previousMedia() {
+    currentMediaIndex = (currentMediaIndex - 1 + mediaFiles.length) % mediaFiles.length;
+    changeMainMedia(currentMediaIndex);
 }
 
 function updateThumbnailBorders() {
     document.querySelectorAll('.thumbnail').forEach((thumb, index) => {
-        if (index === currentImageIndex) {
+        if (index === currentMediaIndex) {
             thumb.classList.remove('border-gray-200');
             thumb.classList.add('border-[#007daf]');
         } else {
@@ -272,18 +369,28 @@ function openOrderModal() {
     }
 }
 
-// Keyboard navigation for images
+// Keyboard navigation for media
 document.addEventListener('keydown', function(e) {
     if (e.key === 'ArrowRight') {
-        nextImage();
+        nextMedia();
     } else if (e.key === 'ArrowLeft') {
-        previousImage();
+        previousMedia();
+    }
+});
+
+// Pause video when navigating away
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        const currentMedia = document.getElementById('mainMedia');
+        if (currentMedia && currentMedia.tagName === 'VIDEO') {
+            currentMedia.pause();
+        }
     }
 });
 </script>
 
 <style>
-#mainImage {
+#mainMedia {
     transition: opacity 0.3s ease-in-out;
 }
 
@@ -355,94 +462,15 @@ document.addEventListener('keydown', function(e) {
 .overflow-x-auto::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(90deg, #006b9c, #b560c3);
 }
-</style>
-@endsectionvalue = '{{ $produk->id }}';
-        document.body.style.overflow = 'hidden';
-    }
+
+/* Video player custom styling */
+video::-webkit-media-controls-panel {
+    background-image: linear-gradient(transparent, rgba(0, 125, 175, 0.3));
 }
 
-// Keyboard navigation for images
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'ArrowRight') {
-        nextImage();
-    } else if (e.key === 'ArrowLeft') {
-        previousImage();
-    }
-});
-</script>
-
-<style>
-#mainImage {
-    transition: opacity 0.3s ease-in-out;
-}
-
-.animate-fade-in {
-    animation: fade-in 0.6s ease-out forwards;
-}
-
-@keyframes fade-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-up {
-    animation: fade-up 0.8s ease-out;
-}
-
-@keyframes fade-up {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.animate-fade-down {
-    animation: fade-down 0.6s ease-out;
-}
-
-@keyframes fade-down {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.prose {
-    font-size: 1.125rem;
-    line-height: 1.75;
-}
-
-/* Custom scrollbar for thumbnail gallery */
-.overflow-x-auto::-webkit-scrollbar {
-    height: 8px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #007daf, #c771d4);
-    border-radius: 10px;
-}
-
-.overflow-x-auto::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(90deg, #006b9c, #b560c3);
+video::-webkit-media-controls-play-button {
+    background-color: rgba(0, 125, 175, 0.8);
+    border-radius: 50%;
 }
 </style>
 @endsection

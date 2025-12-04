@@ -5,10 +5,11 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Penjual\TokoController;
 use App\Http\Controllers\Penjual\ProdukController;
-use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\KategoriController;
 use App\Http\Controllers\Admin\FAQController;
 use App\Http\Controllers\PesananController;
+use App\Http\Controllers\Penjual\PesananController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,10 +28,10 @@ Route::get('/ping', fn() => response()->json(['message' => 'GiftKita API aktif �
 // 🧑‍💼 ADMIN
 // ==========================
 Route::prefix('admin')->group(function () {
-    Route::get('/', [AdminController::class, 'index']);
-    Route::post('/', [AdminController::class, 'store']);
-    Route::put('/{uuid}', [AdminController::class, 'update']);
-    Route::delete('/{uuid}', [AdminController::class, 'destroy']);
+    Route::get('/', [AdminAuthController::class, 'index']);
+    Route::post('/', [AdminAuthController::class, 'store']);
+    Route::put('/{uuid}', [AdminAuthController::class, 'update']);
+    Route::delete('/{uuid}', [AdminAuthController::class, 'destroy']);
 
     // CRUD kategori
     Route::apiResource('kategori', KategoriController::class);

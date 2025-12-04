@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Toko;
@@ -14,7 +15,11 @@ class TokoPublikController extends Controller
 
     public function show($uuid)
     {
-        $toko = Toko::with(['produks.files', 'penjual'])->where('id', $uuid)->firstOrFail();
+        // ✅ Ubah dari where('id', $uuid) menjadi:
+        $toko = Toko::with(['produks.files', 'penjual'])
+            ->where('uuid', $uuid) // ✅ Query berdasarkan UUID
+            ->firstOrFail();
+
         return view('toko.show', compact('toko'));
     }
 }

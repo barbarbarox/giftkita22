@@ -57,14 +57,32 @@
                 <div class="p-6">
                     <div class="flex flex-col md:flex-row gap-6">
                         <!-- Product Image -->
-                        <div class="md:w-48 h-48 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0">
-                            @if($pesanan->produk->files && $pesanan->produk->files->count() > 0)
-                                <img src="{{ asset('storage/' . $pesanan->produk->files->first()->path) }}" 
+                        <div class="md:w-48 h-48 bg-gray-100 rounded-xl overflow-hidden flex-shrink-0 border-2 border-gray-200">
+                            @php
+                                // Cari file pertama dari produk
+                                $firstFile = $pesanan->produk->files->first();
+                                
+                                if ($firstFile) {
+                                    // Cek apakah filepath sudah include 'storage/' atau belum
+                                    if (str_starts_with($firstFile->filepath, 'storage/')) {
+                                        $imageUrl = asset($firstFile->filepath);
+                                    } else {
+                                        $imageUrl = asset('storage/' . $firstFile->filepath);
+                                    }
+                                } else {
+                                    $imageUrl = null;
+                                }
+                            @endphp
+                            
+                            @if($imageUrl)
+                                <img src="{{ $imageUrl }}" 
                                      alt="{{ $pesanan->produk->nama }}"
-                                     class="w-full h-full object-cover">
+                                     class="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                                     onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-gray-400\'><i class=\'fas fa-image text-6xl\'></i></div>';">
                             @else
-                                <div class="w-full h-full flex items-center justify-center text-gray-400">
-                                    <i class="fas fa-image text-6xl"></i>
+                                <div class="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                                    <i class="fas fa-image text-6xl mb-2"></i>
+                                    <p class="text-xs">Foto tidak tersedia</p>
                                 </div>
                             @endif
                         </div>
@@ -109,8 +127,39 @@
                     
                     @if($pesanan->produk->deskripsi)
                     <div class="mt-6 pt-6 border-t border-gray-200">
-                        <h4 class="font-semibold text-gray-700 mb-2">Deskripsi Produk</h4>
+                        <h4 class="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                            <i class="fas fa-align-left text-blue-500"></i>
+                            Deskripsi Produk
+                        </h4>
                         <p class="text-gray-600 text-sm leading-relaxed">{{ $pesanan->produk->deskripsi }}</p>
+                    </div>
+                    @endif
+                    
+                    {{-- Tampilkan semua foto produk jika ada lebih dari 1 --}}
+                    @if($pesanan->produk->files && $pesanan->produk->files->count() > 1)
+                    <div class="mt-6 pt-6 border-t border-gray-200">
+                        <h4 class="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <i class="fas fa-images text-purple-500"></i>
+                            Galeri Foto Produk ({{ $pesanan->produk->files->count() }} foto)
+                        </h4>
+                        <div class="grid grid-cols-4 md:grid-cols-6 gap-3">
+                            @foreach($pesanan->produk->files as $file)
+                                @php
+                                    if (str_starts_with($file->filepath, 'storage/')) {
+                                        $thumbUrl = asset($file->filepath);
+                                    } else {
+                                        $thumbUrl = asset('storage/' . $file->filepath);
+                                    }
+                                @endphp
+                                <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden border-2 border-gray-200 hover:border-blue-400 transition-all cursor-pointer group">
+                                    <img src="{{ $thumbUrl }}" 
+                                         alt="Foto {{ $loop->iteration }}"
+                                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                         onclick="showImageModal('{{ $thumbUrl }}')"
+                                         onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-gray-400\'><i class=\'fas fa-image\'></i></div>';">
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                     @endif
                 </div>
@@ -278,7 +327,6 @@
                         <option value="pending" {{ $pesanan->status == 'pending' ? 'selected' : '' }}>⏳ Pending</option>
                         <option value="dikonfirmasi" {{ $pesanan->status == 'dikonfirmasi' ? 'selected' : '' }}>✅ Dikonfirmasi</option>
                         <option value="diproses" {{ $pesanan->status == 'diproses' ? 'selected' : '' }}>⚙️ Diproses</option>
-                        <option value="dikirim" {{ $pesanan->status == 'dikirim' ? 'selected' : '' }}>🚚 Dikirim</option>
                         <option value="selesai" {{ $pesanan->status == 'selesai' ? 'selected' : '' }}>✔️ Selesai</option>
                         <option value="dibatalkan" {{ $pesanan->status == 'dibatalkan' ? 'selected' : '' }}>❌ Dibatalkan</option>
                     </select>
@@ -320,10 +368,40 @@
     </div>
 </div>
 
+{{-- Modal untuk Preview Gambar --}}
+<div id="imageModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4" onclick="closeImageModal()">
+    <div class="relative max-w-4xl max-h-full">
+        <button onclick="closeImageModal()" class="absolute -top-10 right-0 text-white hover:text-gray-300 text-4xl">&times;</button>
+        <img id="modalImage" src="" alt="Preview" class="max-w-full max-h-screen rounded-lg shadow-2xl">
+    </div>
+</div>
+
 <!-- SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+// Image Modal Functions
+function showImageModal(imageUrl) {
+    const modal = document.getElementById('imageModal');
+    const modalImage = document.getElementById('modalImage');
+    modalImage.src = imageUrl;
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeImageModal() {
+    const modal = document.getElementById('imageModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeImageModal();
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
     const statusSelect = document.getElementById('statusSelect');
     
@@ -404,6 +482,19 @@ document.addEventListener('DOMContentLoaded', () => {
 @media print {
     .no-print {
         display: none !important;
+    }
+}
+
+#imageModal {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
     }
 }
 </style>

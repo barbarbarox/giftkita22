@@ -108,7 +108,8 @@
                         }
                     @endphp
                     
-                    <a href="{{ route('toko.show', $toko->id) }}"
+                    {{-- ✅ PERBAIKAN: Gunakan $toko->uuid, bukan $toko->id --}}
+                    <a href="{{ route('toko.show', $toko->uuid ?? $toko->id) }}"
                        class="toko-card group bg-white rounded-xl md:rounded-2xl shadow-md hover:shadow-xl md:hover:shadow-2xl border border-gray-100 overflow-hidden transform transition-all duration-500 hover:scale-105"
                        data-aos="zoom-in"
                        data-aos-delay="{{ $loop->index * 50 }}"

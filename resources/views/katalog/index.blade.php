@@ -10,8 +10,9 @@
         <div class="text-center mb-8 md:mb-12" data-aos="fade-down">
             <h1 class="text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3 md:mb-4 
                        bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 
-                       bg-clip-text text-transparent">
-                🎁 Katalog Produk GiftKita
+                       bg-clip-text text-transparent flex items-center justify-center gap-3">
+                <i class="fas fa-gift text-blue-600"></i>
+                Katalog Produk GiftKita
             </h1>
             <p class="text-gray-600 text-sm md:text-base lg:text-lg max-w-2xl mx-auto px-4">
                 Temukan hadiah sempurna untuk orang tersayang dengan koleksi produk pilihan kami
@@ -45,7 +46,9 @@
                     <div class="relative">
                         <select name="kategori" 
                                 class="w-full px-4 py-2.5 md:py-3 pl-10 md:pl-12 border-2 border-gray-200 rounded-lg md:rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-100 transition-all duration-300 appearance-none cursor-pointer bg-white text-sm md:text-base">
-                            <option value="">🏷️ Semua Kategori</option>
+                            <option value="">
+                                <i class="fas fa-layer-group"></i> Semua Kategori
+                            </option>
                             @foreach($kategoris as $kategori)
                                 <option value="{{ $kategori->id }}" {{ request('kategori') == $kategori->id ? 'selected' : '' }}>
                                     {{ $kategori->nama_kategori }}
@@ -53,7 +56,7 @@
                             @endforeach
                         </select>
                         <div class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <i class="fas fa-tags text-sm md:text-base"></i>
+                            <i class="fas fa-layer-group text-sm md:text-base"></i>
                         </div>
                         <div class="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                             <i class="fas fa-chevron-down text-sm"></i>
@@ -64,14 +67,14 @@
                     <div class="relative">
                         <select name="sort" 
                                 class="w-full px-4 py-2.5 md:py-3 pl-10 md:pl-12 border-2 border-gray-200 rounded-lg md:rounded-xl focus:border-pink-500 focus:ring-4 focus:ring-pink-100 transition-all duration-300 appearance-none cursor-pointer bg-white text-sm md:text-base">
-                            <option value="">📊 Urutkan</option>
+                            <option value="">Urutkan</option>
                             <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
                             <option value="termurah" {{ request('sort') == 'termurah' ? 'selected' : '' }}>Harga Termurah</option>
                             <option value="termahal" {{ request('sort') == 'termahal' ? 'selected' : '' }}>Harga Termahal</option>
                             <option value="nama" {{ request('sort') == 'nama' ? 'selected' : '' }}>Nama A-Z</option>
                         </select>
                         <div class="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                            <i class="fas fa-sort text-sm md:text-base"></i>
+                            <i class="fas fa-sort-amount-down text-sm md:text-base"></i>
                         </div>
                         <div class="absolute right-3 md:right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
                             <i class="fas fa-chevron-down text-sm"></i>
@@ -89,7 +92,10 @@
                 {{-- Active Filters Display --}}
                 @if(request()->hasAny(['q', 'kategori', 'sort']))
                 <div class="flex flex-wrap items-center gap-2 md:gap-3 pt-3 md:pt-4 border-t border-gray-200">
-                    <span class="text-xs md:text-sm text-gray-600 font-semibold">Filter Aktif:</span>
+                    <span class="text-xs md:text-sm text-gray-600 font-semibold flex items-center gap-2">
+                        <i class="fas fa-filter"></i>
+                        Filter Aktif:
+                    </span>
                     
                     @if(request('q'))
                     <span class="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1.5 md:px-4 md:py-2 rounded-full text-xs md:text-sm font-semibold">
@@ -121,8 +127,9 @@
                     </span>
                     @endif
                     
-                    <a href="{{ route('katalog.index') }}" class="text-xs md:text-sm text-red-600 hover:text-red-700 font-semibold ml-auto">
-                        <i class="fas fa-redo mr-1"></i>Reset Semua
+                    <a href="{{ route('katalog.index') }}" class="text-xs md:text-sm text-red-600 hover:text-red-700 font-semibold ml-auto flex items-center gap-1">
+                        <i class="fas fa-redo"></i>
+                        Reset Semua
                     </a>
                 </div>
                 @endif
@@ -131,7 +138,8 @@
 
         {{-- Results Info & View Toggle --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 md:mb-6 gap-3 md:gap-4" data-aos="fade-up">
-            <div class="text-gray-700 text-sm md:text-base">
+            <div class="text-gray-700 text-sm md:text-base flex items-center gap-2">
+                <i class="fas fa-box-open text-blue-600 text-lg md:text-xl"></i>
                 <span class="font-bold text-xl md:text-2xl text-blue-600">{{ $produks->count() }}</span>
                 <span class="text-base md:text-lg">produk ditemukan</span>
             </div>
@@ -153,7 +161,7 @@
         @if ($produks->isEmpty())
             <div class="text-center py-12 md:py-20" data-aos="fade-up">
                 <div class="mb-4 md:mb-6">
-                    <i class="fas fa-inbox text-6xl md:text-8xl text-gray-300"></i>
+                    <i class="fas fa-box-open text-6xl md:text-8xl text-gray-300"></i>
                 </div>
                 <h3 class="text-xl md:text-2xl font-bold text-gray-700 mb-2">Produk Tidak Ditemukan</h3>
                 <p class="text-sm md:text-base text-gray-500 mb-4 md:mb-6">Coba ubah kata kunci atau filter pencarian Anda</p>
@@ -184,7 +192,8 @@
                             
                             {{-- Category Badge --}}
                             @if($produk->kategori)
-                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold text-purple-600">
+                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold text-purple-600 flex items-center gap-1">
+                                <i class="fas fa-tag text-xs"></i>
                                 {{ $produk->kategori->nama_kategori }}
                             </div>
                             @endif
@@ -211,7 +220,8 @@
                             
                             {{-- Price --}}
                             <div class="pt-1 md:pt-2">
-                                <p class="product-price text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                                <p class="product-price text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-1">
+                                    <i class="fas fa-tag text-sm md:text-base text-blue-600"></i>
                                     Rp {{ number_format($produk->harga, 0, ',', '.') }}
                                 </p>
                             </div>

@@ -51,7 +51,7 @@
         </form>
 
         <!-- Custom Date Range (Hidden by default) -->
-        <div id="customDateRange" class="mt-4 hidden grid grid-cols-2 gap-4">
+        <div id="customDateRange" class="mt-4 {{ $periode == 'custom' ? '' : 'hidden' }} grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
                 <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
@@ -242,7 +242,7 @@
     </div>
 
     <!-- Additional Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <!-- Total Produk -->
         <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between mb-4">
@@ -275,19 +275,24 @@
                 <h3 class="text-xl font-bold mb-1">
                     <i class="fas fa-download mr-2"></i>Export Laporan Statistik
                 </h3>
-                <p class="text-blue-100 text-sm">Unduh laporan mu tinggal sat set</p>
+                <p class="text-blue-100 text-sm">Unduh laporan dalam berbagai format</p>
             </div>
-            <div class="flex flex-wrap gap-3">
-                <button onclick="exportPDF()" class="bg-white text-red-600 px-6 py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                    <i class="fas fa-file-pdf mr-2"></i>Cetak laporan
+            <div class="flex flex-wrap gap-3 justify-center md:justify-end">
+                <button onclick="exportPDF()" class="bg-white text-red-600 px-5 py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                    <i class="fas fa-file-pdf text-xl"></i>
+                    <span>Export PDF</span>
                 </button>
-                <button onclick="exportImage()" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300">
-                    <i class="fas fa-file-image mr-2"></i>Cetak PDF
+                <button onclick="exportImage()" class="bg-white text-purple-600 px-5 py-3 rounded-lg font-semibold hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2">
+                    <i class="fas fa-print text-xl"></i>
+                    <span>Print/Save</span>
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- SweetAlert2 for notifications -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -372,8 +377,7 @@
             }
         }
     });
-</script>
-<script>
+
     // Fungsi untuk mendapatkan parameter filter saat ini
     function getCurrentFilters() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -387,6 +391,17 @@
 
     // Export ke PDF
     function exportPDF() {
+        // Show loading
+        Swal.fire({
+            title: 'Memproses Export PDF...',
+            html: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const filters = getCurrentFilters();
         const params = new URLSearchParams();
         
@@ -396,11 +411,36 @@
         if (filters.end_date) params.append('end_date', filters.end_date);
         
         const url = `{{ route('penjual.statistik.export.pdf') }}?${params.toString()}`;
+        
+        // Trigger download
         window.location.href = url;
+        
+        // Close loading after a short delay
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: 'Export PDF Berhasil!',
+                text: 'File akan segera didownload',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }, 1500);
     }
 
     // Export ke Excel
     function exportExcel() {
+        // Show loading
+        Swal.fire({
+            title: 'Memproses Export Excel...',
+            html: 'Mohon tunggu sebentar',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
         const filters = getCurrentFilters();
         const params = new URLSearchParams();
         
@@ -410,27 +450,74 @@
         if (filters.end_date) params.append('end_date', filters.end_date);
         
         const url = `{{ route('penjual.statistik.export.excel') }}?${params.toString()}`;
+        
+        // Trigger download
         window.location.href = url;
-    }
-
-    // Export ke Word (alternatif via PDF)
-    function exportWord() {
-        if (confirm('💡 Tips: Export ke PDF terlebih dahulu, lalu buka file PDF tersebut di Microsoft Word untuk mengedit lebih lanjut.\n\nLanjutkan export PDF?')) {
-            exportPDF();
-        }
+        
+        // Close loading after a short delay
+        setTimeout(() => {
+            Swal.close();
+            Swal.fire({
+                icon: 'success',
+                title: 'Export Excel Berhasil!',
+                text: 'File Excel akan segera didownload',
+                timer: 2000,
+                showConfirmButton: false
+            });
+        }, 1500);
     }
 
     // Export sebagai Image (menggunakan Print)
     function exportImage() {
-        if (confirm('📸 Gunakan fungsi Print pada browser (Ctrl+P / Cmd+P) dan pilih:\n\n✅ "Save as PDF" untuk hasil terbaik\n✅ "Microsoft Print to PDF"\n✅ Atau screenshot manual\n\nLanjutkan ke halaman print?')) {
-            window.print();
-        }
-    }
-
-    // Optional: Tambahkan loading indicator saat export
-    function showLoadingExport(message = 'Sedang memproses export...') {
-        // Bisa ditambahkan loading overlay jika diinginkan
-        console.log(message);
+        Swal.fire({
+            title: '🖨️ Print/Save as PDF',
+            html: `
+                <div class="text-left space-y-2">
+                    <p class="font-semibold mb-3">Gunakan fungsi Print browser untuk menyimpan:</p>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li><strong>Windows:</strong> Ctrl + P</li>
+                        <li><strong>Mac:</strong> Cmd + P</li>
+                        <li>Pilih "Save as PDF" atau "Microsoft Print to PDF"</li>
+                        <li>Atau screenshot manual untuk format gambar</li>
+                    </ul>
+                </div>
+            `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Buka Print',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.print();
+            }
+        });
     }
 </script>
+
+<style>
+@media print {
+    /* Hide elements that shouldn't be printed */
+    .no-print,
+    button,
+    nav,
+    aside,
+    header,
+    footer {
+        display: none !important;
+    }
+    
+    /* Optimize for print */
+    body {
+        font-size: 12pt;
+    }
+    
+    .bg-gradient-to-br,
+    .bg-gradient-to-r {
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+}
+</style>
 @endsection
