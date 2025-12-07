@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Controllers/Penjual/ProdukController.php
 namespace App\Http\Controllers\Penjual;
 
 use App\Http\Controllers\Controller;
@@ -10,6 +10,8 @@ use App\Models\Produk;
 use App\Models\Kategori;
 use App\Models\Toko;
 use Illuminate\Support\Str;
+use App\Imports\ProdukImport;
+use Rap2hpoutre\FastExcel\FastExcel;
 
 class ProdukController extends Controller
 {
@@ -181,5 +183,85 @@ class ProdukController extends Controller
         return redirect()
             ->route('penjual.produk.index')
             ->with('success', 'Produk berhasil dihapus!');
+    }
+    /**
+     * Tampilkan halaman import
+     */
+    public function showImportForm()
+    {
+        return view('penjual.produk.import');
+    }
+
+    /**
+     * Download template Excel
+     */
+    public function downloadTemplate()
+    {
+        $penjual = Auth::guard('penjual')->user();
+
+        // Data contoh untuk template
+        $data = [
+            [
+                'nama_produk' => 'Contoh Produk 1',
+                'deskripsi' => 'Deskripsi produk contoh (opsional)',
+                'harga' => 100000,
+                'kategori' => 'Nama Kategori', // Harus sesuai dengan kategori di database
+                'nama_toko' => $penjual->tokos->first()->nama_toko ?? 'Nama Toko Anda',
+            ],
+            [
+                'nama_produk' => 'Contoh Produk 2',
+                'deskripsi' => 'Produk berkualitas tinggi',
+                'harga' => 250000,
+                'kategori' => 'Nama Kategori',
+                'nama_toko' => $penjual->tokos->first()->nama_toko ?? 'Nama Toko Anda',
+            ],
+        ];
+
+        return (new FastExcel($data))->download('template_import_produk.xlsx');
+    }
+
+    /**
+     * Proses import data
+     */
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv|max:2048'
+        ], [
+            'file.required' => 'File wajib diupload',
+            'file.mimes' => 'File harus berformat Excel (.xlsx, .xls) atau CSV',
+            'file.max' => 'Ukuran file maksimal 2MB'
+        ]);
+
+        try {
+            $file = $request->file('file');
+
+            // Proses import
+            $importer = new ProdukImport();
+            $stats = $importer->import($file);
+
+            // Cek hasil import
+            if ($stats['success'] > 0 && $stats['error'] == 0) {
+                return redirect()
+                    ->route('penjual.produk.import.form')
+                    ->with('success', "Berhasil mengimport {$stats['success']} produk!");
+            } elseif ($stats['success'] > 0 && $stats['error'] > 0) {
+                return redirect()
+                    ->route('penjual.produk.import.form')
+                    ->with('warning', "Import selesai dengan {$stats['success']} produk berhasil dan {$stats['error']} produk gagal.")
+                    ->with('errors', $stats['errors'])
+                    ->with('validation_errors', $stats['validation_errors']);
+            } else {
+                return redirect()
+                    ->route('penjual.produk.import.form')
+                    ->with('error', 'Semua data gagal diimport. Silakan periksa format file Anda.')
+                    ->with('errors', $stats['errors'])
+                    ->with('validation_errors', $stats['validation_errors']);
+            }
+        } catch (\Exception $e) {
+            return redirect()
+                ->route('penjual.produk.import.form')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 }

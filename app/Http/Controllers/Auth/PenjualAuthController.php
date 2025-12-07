@@ -1,5 +1,9 @@
 <?php
 
+/**
+ * /Controller/Auth/PenjualAuthController.php
+ */
+
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
@@ -11,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Facades\Socialite;
 use App\Models\Penjual;
+use App\Rules\Recaptcha;
 
 class PenjualAuthController extends Controller
 {
@@ -21,11 +26,6 @@ class PenjualAuthController extends Controller
      */
     public function showLoginForm()
     {
-        // ❌ JANGAN LAKUKAN INI - Middleware guest:penjual sudah handle redirect
-        // if (Auth::guard('penjual')->check()) {
-        //     return redirect()->route('penjual.dashboard');
-        // }
-        
         return view('penjual.auth.login');
     }
 
@@ -37,9 +37,17 @@ class PenjualAuthController extends Controller
         // Cek rate limiting terlebih dahulu
         $this->checkTooManyFailedAttempts($request);
 
+        // ✅ Validasi input + reCAPTCHA
         $credentials = $request->validate([
             'email' => 'required|email|max:255',
             'password' => 'required|string|min:6',
+            'g-recaptcha-response' => ['required', new Recaptcha]
+        ], [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+            'password.min' => 'Password minimal 6 karakter.',
+            'g-recaptcha-response.required' => 'Silakan centang reCAPTCHA.',
         ]);
 
         // ⚠️ PENTING: Cek apakah user ada di database
@@ -54,7 +62,8 @@ class PenjualAuthController extends Controller
                 'attempts' => $this->getLoginAttempts($request)
             ]);
 
-            return back()->withErrors(['email' => 'Email atau password salah.'])->withInput();
+            return back()->withErrors(['email' => 'Email atau password salah.'])
+                ->withInput($request->only('email'));
         }
 
         if (!Hash::check($credentials['password'], $penjual->password)) {
@@ -66,22 +75,33 @@ class PenjualAuthController extends Controller
                 'attempts' => $this->getLoginAttempts($request)
             ]);
 
-            return back()->withErrors(['password' => 'Email atau password salah.'])->withInput();
+            return back()->withErrors(['password' => 'Email atau password salah.'])
+                ->withInput($request->only('email'));
         }
 
         // ⚠️ VALIDASI STATUS AKUN - Cek apakah akun aktif
         if ($penjual->isInactive()) {
             return back()->withErrors([
+                'account_banned' => 'Akun Anda telah dinonaktifkan.',
                 'status' => 'Akun Anda telah dinonaktifkan oleh admin.',
                 'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
                 'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null
+            ])->with('ban_info', [
+                'banned' => true,
+                'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
+                'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null,
             ])->withInput($request->only('email'));
         }
 
         // ✅ Login berhasil - Clear rate limiter
         $this->clearLoginAttempts($request);
 
-        // Login user
+        // Login user (hapus g-recaptcha-response dari credentials)
+        $loginCredentials = [
+            'email' => $credentials['email'],
+            'password' => $credentials['password']
+        ];
+
         Auth::guard('penjual')->login($penjual, $request->filled('remember'));
         $request->session()->regenerate();
 
@@ -102,42 +122,26 @@ class PenjualAuthController extends Controller
     {
         $penjual = Auth::guard('penjual')->user();
 
-        Log::debug('Logout - Before', [
+        Log::info('Penjual logout', [
             'penjual_id' => $penjual->id ?? null,
             'email' => $penjual->email ?? null,
-            'ip' => $request->ip(),
-            'session_id' => $request->session()->getId(),
-            'is_authenticated' => Auth::guard('penjual')->check(),
+            'ip' => $request->ip()
         ]);
 
-        // 🔥 CRITICAL: Forget remember token
+        // 1. Forget remember token
         if ($penjual) {
             $penjual->setRememberToken(null);
             $penjual->save();
         }
 
-        // 🔥 CRITICAL: Logout dari guard penjual
+        // 2. Logout dari guard
         Auth::guard('penjual')->logout();
-        
-        // 🔥 CRITICAL: Flush semua session data
-        $request->session()->flush();
-        
-        // 🔥 CRITICAL: Invalidate session
+
+        // 3. Invalidate session SEBELUM regenerate
         $request->session()->invalidate();
-        
-        // 🔥 CRITICAL: Regenerate CSRF token
+
+        // 4. Regenerate token untuk CSRF protection
         $request->session()->regenerateToken();
-
-        Log::debug('Logout - After', [
-            'is_authenticated' => Auth::guard('penjual')->check(),
-            'session_has_token' => $request->session()->has('_token'),
-        ]);
-
-        Log::info('Penjual berhasil logout', [
-            'penjual_id' => $penjual->id ?? null,
-            'email' => $penjual->email ?? null,
-            'ip' => $request->ip()
-        ]);
 
         return redirect()->route('penjual.login')
             ->with('status', 'Anda telah berhasil logout.');
@@ -149,16 +153,18 @@ class PenjualAuthController extends Controller
     public function redirectToGoogle()
     {
         // Validasi konfigurasi sebelum redirect
-        if (empty(config('services.google.client_id')) || 
+        if (
+            empty(config('services.google.client_id')) ||
             empty(config('services.google.client_secret')) ||
-            empty(config('services.google.redirect'))) {
-            
+            empty(config('services.google.redirect'))
+        ) {
+
             Log::error('Google OAuth Configuration Missing', [
                 'client_id' => config('services.google.client_id') ? 'Set' : 'Missing',
                 'client_secret' => config('services.google.client_secret') ? 'Set' : 'Missing',
                 'redirect' => config('services.google.redirect') ?? 'Missing'
             ]);
-            
+
             return redirect()->route('penjual.login')
                 ->withErrors(['error' => 'Konfigurasi Google OAuth belum lengkap. Hubungi administrator.']);
         }
@@ -250,9 +256,14 @@ class PenjualAuthController extends Controller
                     ]);
 
                     return redirect()->route('penjual.login')->withErrors([
+                        'account_banned' => 'Akun Anda telah dinonaktifkan.',
                         'status' => 'Akun Anda telah dinonaktifkan oleh admin.',
                         'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
                         'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null
+                    ])->with('ban_info', [
+                        'banned' => true,
+                        'reason' => $penjual->deactivation_reason ?? 'Tidak ada alasan yang diberikan.',
+                        'date' => $penjual->deactivated_at ? $penjual->deactivated_at->format('d M Y H:i') : null,
                     ]);
                 }
 
@@ -270,7 +281,6 @@ class PenjualAuthController extends Controller
 
             return redirect()->route('penjual.dashboard')
                 ->with('success', $welcomeMessage);
-
         } catch (\Laravel\Socialite\Two\InvalidStateException $e) {
             Log::error('Google OAuth Invalid State', [
                 'error' => $e->getMessage(),
@@ -280,7 +290,6 @@ class PenjualAuthController extends Controller
 
             return redirect()->route('penjual.login')
                 ->withErrors(['error' => 'Sesi Google login telah kedaluwarsa. Silakan coba lagi.']);
-
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             Log::error('Google OAuth Client Error', [
                 'error' => $e->getMessage(),
@@ -289,7 +298,6 @@ class PenjualAuthController extends Controller
 
             return redirect()->route('penjual.login')
                 ->withErrors(['error' => 'Gagal berkomunikasi dengan Google. Pastikan Anda mengizinkan akses.']);
-
         } catch (\Exception $e) {
             Log::error('Google Callback Error', [
                 'error' => $e->getMessage(),
@@ -308,11 +316,6 @@ class PenjualAuthController extends Controller
      */
     public function showRegisterForm()
     {
-        // ❌ JANGAN LAKUKAN INI - Middleware guest:penjual sudah handle redirect
-        // if (Auth::guard('penjual')->check()) {
-        //     return redirect()->route('penjual.dashboard');
-        // }
-        
         return view('penjual.auth.register');
     }
 
@@ -321,15 +324,23 @@ class PenjualAuthController extends Controller
      */
     public function register(Request $request)
     {
+        // ✅ Validasi input + reCAPTCHA
         $validated = $request->validate([
             'username' => 'required|string|max:255',
             'email' => 'required|email|unique:penjuals,email|max:255',
             'password' => 'required|string|min:6|confirmed',
             'no_hp' => 'required|string|max:20',
+            'g-recaptcha-response' => ['required', new Recaptcha]
         ], [
+            'username.required' => 'Nama pengguna wajib diisi.',
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain atau login.',
+            'password.required' => 'Password wajib diisi.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
             'password.min' => 'Password minimal 6 karakter.',
+            'no_hp.required' => 'Nomor HP wajib diisi.',
+            'g-recaptcha-response.required' => 'Silakan centang reCAPTCHA.',
         ]);
 
         $penjual = Penjual::create([

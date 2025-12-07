@@ -9,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ asset('images/GiftKita.png') }}">
+    
+    <!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body class="min-h-screen relative overflow-x-hidden">
@@ -234,8 +237,11 @@
                                     Email
                                 </label>
                                 <input type="email" name="email" id="emailInput" required value="{{ old('email') }}"
-                                    class="w-full px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 outline-none"
+                                    class="w-full px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all duration-300 outline-none @error('email') border-red-500 @enderror"
                                     placeholder="email@example.com">
+                                @error('email')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Password -->
@@ -246,7 +252,7 @@
                                 </label>
                                 <div class="relative">
                                     <input type="password" id="password" name="password" required
-                                        class="w-full px-3 md:px-4 py-2.5 md:py-3 pr-12 text-sm md:text-base border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 outline-none"
+                                        class="w-full px-3 md:px-4 py-2.5 md:py-3 pr-12 text-sm md:text-base border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 outline-none @error('password') border-red-500 @enderror"
                                         placeholder="••••••••">
                                     <button type="button" id="togglePassword" class="absolute right-2 md:right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                         <div class="eye-container">
@@ -260,6 +266,9 @@
                                         </div>
                                     </button>
                                 </div>
+                                @error('password')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Remember Me -->
@@ -268,6 +277,14 @@
                                     <input type="checkbox" name="remember" id="rememberCheckbox" class="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 focus:ring-2 cursor-pointer">
                                     <span class="text-gray-600 group-hover:text-gray-800 transition">Ingat Saya</span>
                                 </label>
+                            </div>
+
+                            <!-- reCAPTCHA -->
+                            <div class="form-group">
+                                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                @error('g-recaptcha-response')
+                                    <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Submit Button -->
@@ -478,234 +495,233 @@
         }
 
         /* Floating Shapes */
-        .floating-shape {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
-            background: rgba(255, 255, 255, 0.1);
-            animation: float 15s infinite ease-in-out;
-        }
+        .floating
+        -shape {
+position: absolute;
+width: 100px;
+height: 100px;
+border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+background: rgba(255, 255, 255, 0.1);
+animation: float 15s infinite ease-in-out;
+}
+    .floating-shape:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+    .floating-shape:nth-child(2) { top: 60%; right: 20%; animation-delay: 5s; }
+    .floating-shape:nth-child(3) { bottom: 20%; left: 60%; animation-delay: 10s; }
 
-        .floating-shape:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
-        .floating-shape:nth-child(2) { top: 60%; right: 20%; animation-delay: 5s; }
-        .floating-shape:nth-child(3) { bottom: 20%; left: 60%; animation-delay: 10s; }
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        25% { transform: translate(20px, -20px) rotate(90deg); }
+        50% { transform: translate(0, -40px) rotate(180deg); }
+        75% { transform: translate(-20px, -20px) rotate(270deg); }
+    }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) rotate(0deg); }
-            25% { transform: translate(20px, -20px) rotate(90deg); }
-            50% { transform: translate(0, -40px) rotate(180deg); }
-            75% { transform: translate(-20px, -20px) rotate(270deg); }
-        }
+    /* Fade In Animation */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-        /* Fade In Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
 
-        .animate-fade-in {
-            animation: fadeIn 0.3s ease-out;
-        }
+    /* Eye Animation */
+    .eye-container { width: 20px; height: 20px; position: relative; }
+    .eye { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
+    .eyeball { width: 18px; height: 18px; background: white; border-radius: 50%; border: 2px solid #374151; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
+    .pupil { width: 7px; height: 7px; background: #1f2937; border-radius: 50%; transition: transform 0.3s ease; }
+    .eyelid { position: absolute; width: 22px; background: #374151; left: 50%; transform: translateX(-50%); border-radius: 50%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2; }
+    .eyelid-top { height: 11px; top: 0; transform: translateX(-50%) translateY(-100%); }
+    .eyelid-bottom { height: 11px; bottom: 0; transform: translateX(-50%) translateY(100%); }
+    .eye.closed .eyelid-top { transform: translateX(-50%) translateY(5px); }
+    .eye.closed .eyelid-bottom { transform: translateX(-50%) translateY(-5px); }
 
-        /* Eye Animation */
-        .eye-container { width: 20px; height: 20px; position: relative; }
-        .eye { width: 100%; height: 100%; position: relative; display: flex; align-items: center; justify-content: center; }
-        .eyeball { width: 18px; height: 18px; background: white; border-radius: 50%; border: 2px solid #374151; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; }
-        .pupil { width: 7px; height: 7px; background: #1f2937; border-radius: 50%; transition: transform 0.3s ease; }
-        .eyelid { position: absolute; width: 22px; background: #374151; left: 50%; transform: translateX(-50%); border-radius: 50%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2; }
-        .eyelid-top { height: 11px; top: 0; transform: translateX(-50%) translateY(-100%); }
-        .eyelid-bottom { height: 11px; bottom: 0; transform: translateX(-50%) translateY(100%); }
-        .eye.closed .eyelid-top { transform: translateX(-50%) translateY(5px); }
-        .eye.closed .eyelid-bottom { transform: translateX(-50%) translateY(-5px); }
+    /* Disabled Form */
+    .form-disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        filter: grayscale(50%);
+    }
 
-        /* Disabled Form */
-        .form-disabled {
-            opacity: 0.5;
-            pointer-events: none;
-            filter: grayscale(50%);
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 768px) {
-            .eyeball { width: 16px; height: 16px; }
-            .pupil { width: 6px; height: 6px; }
-            .eyelid { width: 20px; }
-            
-            .modal-content {
-                padding: 1.5rem;
-                margin: 1rem;
-            }
-            
-            .ban-icon {
-                font-size: 3rem;
-            }
-            
-            .ban-modal h2 {
-                font-size: 1.25rem;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .ban-actions {
-                flex-direction: column;
-            }
-            
-            .btn {
-                width: 100%;
-            }
-        }
-    </style>
-
-    <script>
-        console.log('🔍 Login Page Loaded');
-
-        let countdownInterval, isBanned = false;
-        const form = document.getElementById('loginForm');
-        const banWarning = document.getElementById('banWarning');
-        const countdownTimer = document.getElementById('countdownTimer');
-        const attemptCount = document.getElementById('attemptCount');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('password');
-        const submitBtn = document.getElementById('submitBtn');
-        const googleBtn = document.getElementById('googleBtn');
-        const rememberCheckbox = document.getElementById('rememberCheckbox');
-        const togglePassword = document.getElementById('togglePassword');
-
-        // Ban Modal Close Function
-        window.closeBanModal = function() {
-            const modal = document.getElementById('banModal');
-            if (modal) {
-                modal.style.display = 'none';
-                window.location.href = '/';
-            }
-        }
-
-        // Check ban from Laravel error
-        @if($errors->has('email') && str_contains($errors->first('email'), 'Terlalu banyak'))
-            const errorMsg = @json($errors->first('email'));
-            const minutesMatch = errorMsg.match(/dalam (\d+) menit/);
-            if (minutesMatch) {
-                startBanCountdown(parseInt(minutesMatch[1]) * 60, 5);
-            }
-        @endif
-
-        setTimeout(checkBanStatus, 500);
-        setInterval(() => { if (!isBanned) checkBanStatus(); }, 5000);
-        emailInput.addEventListener('input', () => {
-            if (!isBanned && emailInput.value.includes('@')) checkBanStatus();
-        });
-
-        function checkBanStatus() {
-            const email = emailInput.value;
-            if (!email || !email.includes('@')) return;
-
-            fetch('{{ route("penjual.check.ban") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify({ email })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.banned) {
-                    startBanCountdown(data.seconds, data.attempts);
-                } else {
-                    clearBanCountdown();
-                    if (data.attempts > 0) attemptCount.textContent = data.attempts;
-                }
-            })
-            .catch(err => console.error('❌ Error:', err));
-        }
-
-        function startBanCountdown(seconds, attempts) {
-            if (isBanned) return;
-            isBanned = true;
-            banWarning.classList.remove('hidden');
-            attemptCount.textContent = attempts || 0;
-            disableForm();
-            if (countdownInterval) clearInterval(countdownInterval);
-
-            let remaining = seconds;
-            updateTimerDisplay(remaining);
-            countdownInterval = setInterval(() => {
-                remaining--;
-                if (remaining <= 0) {
-                    clearBanCountdown();
-                    setTimeout(checkBanStatus, 500);
-                } else {
-                    updateTimerDisplay(remaining);
-                }
-            }, 1000);
-        }
-
-        function clearBanCountdown() {
-            if (!isBanned) return;
-            isBanned = false;
-            banWarning.classList.add('hidden');
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-            }
-            enableForm();
-        }
-
-        function updateTimerDisplay(seconds) {
-            const m = Math.floor(seconds / 60);
-            const s = seconds % 60;
-            countdownTimer.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-        }
-
-        function disableForm() {
-            form.classList.add('form-disabled');
-            [emailInput, passwordInput, submitBtn, rememberCheckbox, togglePassword].forEach(el => el.disabled = true);
-            googleBtn.style.pointerEvents = 'none';
-            googleBtn.style.opacity = '0.5';
-        }
-
-        function enableForm() {
-            form.classList.remove('form-disabled');
-            [emailInput, passwordInput, submitBtn, rememberCheckbox, togglePassword].forEach(el => el.disabled = false);
-            googleBtn.style.pointerEvents = '';
-            googleBtn.style.opacity = '';
-        }
-
-        // Password visibility toggle
-        const eye = togglePassword.querySelector('.eye');
-        const pupil = togglePassword.querySelector('.pupil');
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+        .eyeball { width: 16px; height: 16px; }
+        .pupil { width: 6px; height: 6px; }
+        .eyelid { width: 20px; }
         
-        togglePassword.addEventListener('click', () => {
-            const isPassword = passwordInput.type === 'password';
-            passwordInput.type = isPassword ? 'text' : 'password';
-            eye.classList.toggle('closed', !isPassword);
-        });
+        .modal-content {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .ban-icon {
+            font-size: 3rem;
+        }
+        
+        .ban-modal h2 {
+            font-size: 1.25rem;
+        }
+    }
 
-        togglePassword.addEventListener('mousemove', (e) => {
-            if (eye.classList.contains('closed')) return;
-            const rect = togglePassword.getBoundingClientRect();
-            const x = e.clientX - rect.left - rect.width / 2;
-            const y = e.clientY - rect.top - rect.height / 2;
-            const angle = Math.atan2(y, x);
-            const distance = Math.min(Math.sqrt(x * x + y * y), 3);
-            pupil.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
-        });
+    @media (max-width: 640px) {
+        .ban-actions {
+            flex-direction: column;
+        }
+        
+        .btn {
+            width: 100%;
+        }
+    }
+</style>
 
-        togglePassword.addEventListener('mouseleave', () => {
-            pupil.style.transform = 'translate(0, 0)';
-        });
+<script>
+    console.log('🔍 Login Page Loaded');
 
-        // Close modal when clicking outside
-        window.addEventListener('click', (e) => {
-            const modal = document.getElementById('banModal');
-            if (modal && e.target === modal) {
-                closeBanModal();
+    let countdownInterval, isBanned = false;
+    const form = document.getElementById('loginForm');
+    const banWarning = document.getElementById('banWarning');
+    const countdownTimer = document.getElementById('countdownTimer');
+    const attemptCount = document.getElementById('attemptCount');
+    const emailInput = document.getElementById('emailInput');
+    const passwordInput = document.getElementById('password');
+    const submitBtn = document.getElementById('submitBtn');
+    const googleBtn = document.getElementById('googleBtn');
+    const rememberCheckbox = document.getElementById('rememberCheckbox');
+    const togglePassword = document.getElementById('togglePassword');
+
+    // Ban Modal Close Function
+    window.closeBanModal = function() {
+        const modal = document.getElementById('banModal');
+        if (modal) {
+            modal.style.display = 'none';
+            window.location.href = '/';
+        }
+    }
+
+    // Check ban from Laravel error
+    @if($errors->has('email') && str_contains($errors->first('email'), 'Terlalu banyak'))
+        const errorMsg = @json($errors->first('email'));
+        const minutesMatch = errorMsg.match(/dalam (\d+) menit/);
+        if (minutesMatch) {
+            startBanCountdown(parseInt(minutesMatch[1]) * 60, 5);
+        }
+    @endif
+
+    setTimeout(checkBanStatus, 500);
+    setInterval(() => { if (!isBanned) checkBanStatus(); }, 5000);
+    emailInput.addEventListener('input', () => {
+        if (!isBanned && emailInput.value.includes('@')) checkBanStatus();
+    });
+
+    function checkBanStatus() {
+        const email = emailInput.value;
+        if (!email || !email.includes('@')) return;
+
+        fetch('{{ route("penjual.check.ban") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({ email })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.banned) {
+                startBanCountdown(data.seconds, data.attempts);
+            } else {
+                clearBanCountdown();
+                if (data.attempts > 0) attemptCount.textContent = data.attempts;
             }
-        });
+        })
+        .catch(err => console.error('❌ Error:', err));
+    }
 
-        console.log('✅ Initialized');
-    </script>
+    function startBanCountdown(seconds, attempts) {
+        if (isBanned) return;
+        isBanned = true;
+        banWarning.classList.remove('hidden');
+        attemptCount.textContent = attempts || 0;
+        disableForm();
+        if (countdownInterval) clearInterval(countdownInterval);
+
+        let remaining = seconds;
+        updateTimerDisplay(remaining);
+        countdownInterval = setInterval(() => {
+            remaining--;
+            if (remaining <= 0) {
+                clearBanCountdown();
+                setTimeout(checkBanStatus, 500);
+            } else {
+                updateTimerDisplay(remaining);
+            }
+        }, 1000);
+    }
+
+    function clearBanCountdown() {
+        if (!isBanned) return;
+        isBanned = false;
+        banWarning.classList.add('hidden');
+        if (countdownInterval) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+        }
+        enableForm();
+    }
+
+    function updateTimerDisplay(seconds) {
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        countdownTimer.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    }
+
+    function disableForm() {
+        form.classList.add('form-disabled');
+        [emailInput, passwordInput, submitBtn, rememberCheckbox, togglePassword].forEach(el => el.disabled = true);
+        googleBtn.style.pointerEvents = 'none';
+        googleBtn.style.opacity = '0.5';
+    }
+
+    function enableForm() {
+        form.classList.remove('form-disabled');
+        [emailInput, passwordInput, submitBtn, rememberCheckbox, togglePassword].forEach(el => el.disabled = false);
+        googleBtn.style.pointerEvents = '';
+        googleBtn.style.opacity = '';
+    }
+
+    // Password visibility toggle
+    const eye = togglePassword.querySelector('.eye');
+    const pupil = togglePassword.querySelector('.pupil');
+    
+    togglePassword.addEventListener('click', () => {
+        const isPassword = passwordInput.type === 'password';
+        passwordInput.type = isPassword ? 'text' : 'password';
+        eye.classList.toggle('closed', !isPassword);
+    });
+
+    togglePassword.addEventListener('mousemove', (e) => {
+        if (eye.classList.contains('closed')) return;
+        const rect = togglePassword.getBoundingClientRect();
+        const x = e.clientX - rect.left - rect.width / 2;
+        const y = e.clientY - rect.top - rect.height / 2;
+        const angle = Math.atan2(y, x);
+        const distance = Math.min(Math.sqrt(x * x + y * y), 3);
+        pupil.style.transform = `translate(${Math.cos(angle) * distance}px, ${Math.sin(angle) * distance}px)`;
+    });
+
+    togglePassword.addEventListener('mouseleave', () => {
+        pupil.style.transform = 'translate(0, 0)';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+        const modal = document.getElementById('banModal');
+        if (modal && e.target === modal) {
+            closeBanModal();
+        }
+    });
+
+    console.log('✅ Initialized');
+</script>
 </body>
-
 </html>

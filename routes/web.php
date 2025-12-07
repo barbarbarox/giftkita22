@@ -85,17 +85,17 @@ Route::get('/clear-session', function () {
     // Backup user info untuk logging
     $penjualId = Auth::guard('penjual')->id();
     $adminId = Auth::guard('admin')->id();
-    
+
     // Logout semua guard
     Auth::guard('penjual')->logout();
     Auth::guard('admin')->logout();
     Auth::guard('web')->logout();
-    
+
     // Invalidate session
     session()->flush();
     session()->invalidate();
     session()->regenerateToken();
-    
+
     // Clear remember token di database
     if (class_exists(\App\Models\Penjual::class)) {
         \App\Models\Penjual::query()->update(['remember_token' => null]);
@@ -103,17 +103,17 @@ Route::get('/clear-session', function () {
     if (class_exists(\App\Models\Admin::class)) {
         \App\Models\Admin::query()->update(['remember_token' => null]);
     }
-    
+
     // Log aktivitas
     \Log::info('Emergency session clear executed', [
         'penjual_id' => $penjualId,
         'admin_id' => $adminId,
         'ip' => request()->ip(),
     ]);
-    
+
     // Buat response dengan cookie clearing
     $response = redirect('/')->with('success', 'Semua session berhasil dibersihkan. Silakan login kembali.');
-    
+
     // Clear semua authentication cookies
     $cookies = [
         'laravel_session',
@@ -123,11 +123,11 @@ Route::get('/clear-session', function () {
         'XSRF-TOKEN',
         session()->getName(),
     ];
-    
+
     foreach ($cookies as $cookie) {
         $response->withCookie(cookie()->forget($cookie));
     }
-    
+
     return $response;
 })->name('clear.session');
 
@@ -139,7 +139,7 @@ Route::get('/clear-session', function () {
 */
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    
+
     // ─────────────────────────────────────────────────────────────
     // 🔓 Guest Routes (Belum Login)
     // ─────────────────────────────────────────────────────────────
@@ -147,18 +147,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
     });
-    
+
     // ─────────────────────────────────────────────────────────────
     // 🔒 Authenticated Routes (Sudah Login)
     // ─────────────────────────────────────────────────────────────
     Route::middleware('auth:admin')->group(function () {
-        
+
         // Logout
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
-        
+
         // 📊 Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
-        
+
         // 📋 Laporan Management
         Route::prefix('laporan')->name('laporan.')->group(function () {
             Route::get('/', [LaporanController::class, 'index'])->name('index');
@@ -168,7 +168,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/bulk-action', [LaporanController::class, 'bulkAction'])->name('bulkAction');
             Route::delete('/{id}', [LaporanController::class, 'destroy'])->name('destroy');
         });
-        
+
         // 👤 Penjual Management
         Route::prefix('penjual')->name('penjual.')->group(function () {
             // Custom actions (sebelum resource)
@@ -178,17 +178,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('/{id}/deactivate', [AdminPenjualController::class, 'deactivate'])->name('deactivate');
             Route::post('/{id}/activate', [AdminPenjualController::class, 'activate'])->name('activate');
         });
-        
+
         // Resource route (setelah custom actions)
         Route::resource('penjual', AdminPenjualController::class)
             ->except(['show'])
             ->names('penjual');
-        
+
         // 🏷️ Kategori Management
         Route::resource('kategori', AdminKategoriController::class)
             ->except(['show'])
             ->names('kategori');
-        
+
         // 📚 FAQ Management
         Route::post('/faq/upload-image', [AdminFaqController::class, 'uploadImage'])->name('faq.uploadImage');
         Route::resource('faq', AdminFaqController::class)
@@ -205,94 +205,88 @@ Route::prefix('admin')->name('admin.')->group(function () {
 */
 
 Route::prefix('penjual')->name('penjual.')->group(function () {
-    
+
     // ─────────────────────────────────────────────────────────────
     // 🔓 Guest Routes (Belum Login)
     // ─────────────────────────────────────────────────────────────
     Route::middleware('guest:penjual')->group(function () {
-        
+
         // Manual Login & Register
         Route::get('/login', [PenjualAuthController::class, 'showLoginForm'])->name('login');
         Route::post('/login', [PenjualAuthController::class, 'login'])->name('login.post');
         Route::get('/register', [PenjualAuthController::class, 'showRegisterForm'])->name('register');
         Route::post('/register', [PenjualAuthController::class, 'register'])->name('register.post');
-        
+
         // Google OAuth
         Route::get('/google/redirect', [PenjualAuthController::class, 'redirectToGoogle'])->name('google.redirect');
         Route::get('/google/callback', [PenjualAuthController::class, 'handleGoogleCallback'])->name('google.callback');
     });
-    
+
     // ─────────────────────────────────────────────────────────────
     // 🔍 Public Routes (Tidak Perlu Auth)
     // ─────────────────────────────────────────────────────────────
-    
+
     // AJAX Check Ban Status (untuk rate limiting di login form)
     Route::post('/check-ban-status', [PenjualAuthController::class, 'checkBanStatus'])->name('check.ban');
-    
+
     // Deactivated Page (akun yang dinonaktifkan)
     Route::get('/deactivated', function () {
         $penjual = auth('penjual')->user();
-        
+
         // Jika tidak login atau akun aktif, redirect
         if (!$penjual) {
             return redirect()->route('penjual.login')
                 ->with('info', 'Silakan login terlebih dahulu.');
         }
-        
+
         if ($penjual->status === 'active') {
             return redirect()->route('penjual.dashboard');
         }
-        
+
         return view('penjual.deactivated', compact('penjual'));
     })->name('deactivated');
-    
+
     // ─────────────────────────────────────────────────────────────
     // 🔒 Authenticated Routes (Sudah Login + Status Active)
     // ─────────────────────────────────────────────────────────────
     Route::middleware(['auth:penjual', 'check.penjual.status'])->group(function () {
-        
+
         // Logout (POST method - recommended)
         Route::post('/logout', [PenjualAuthController::class, 'logout'])->name('logout');
-        
+
         // Logout (GET method - untuk compatibility, tapi kurang aman)
         // ⚠️ WARNING: GET method untuk logout tidak recommended untuk production
         // Karena bisa di-trigger oleh browser prefetch atau link crawler
-        Route::get('/logout', function () {
-            \Log::warning('Logout via GET method', [
-                'user_id' => auth('penjual')->id(),
-                'ip' => request()->ip(),
-                'user_agent' => request()->userAgent(),
-            ]);
-            
-            // Redirect ke POST logout
-            return view('penjual.logout-confirmation');
-        })->name('logout.get');
-        
+
         // 📊 Dashboard
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        
+
         // 👤 Profil
         Route::get('/profil', [ProfilController::class, 'index'])->name('profil');
         Route::put('/profil/update', [ProfilController::class, 'update'])->name('profil.update');
-        
+
         // 🏪 Toko Management
         Route::resource('toko', TokoController::class)
             ->except(['show'])
             ->names('toko');
-        
+
         // 🎁 Produk Management
         Route::delete('/produk/foto/{id}', [ProdukController::class, 'hapusFoto'])->name('produk.foto.destroy');
         Route::resource('produk', ProdukController::class)
             ->except(['show'])
             ->names('produk');
-        
+
         // 📦 Pesanan Management
         Route::prefix('pesanan')->name('pesanan.')->group(function () {
             Route::get('/', [PesananController::class, 'index'])->name('index');
             Route::get('/{id}', [PesananController::class, 'show'])->name('show');
             Route::put('/{id}/status', [PesananController::class, 'updateStatus'])->name('updateStatus');
         });
-        
+        // Route untuk import produk
+        Route::get('/produk/import', [ProdukController::class, 'showImportForm'])->name('produk.import.form');
+        Route::post('/produk/import', [ProdukController::class, 'import'])->name('produk.import');
+        Route::get('/produk/import/template', [ProdukController::class, 'downloadTemplate'])->name('produk.import.template');
+
         // 📈 Statistik & Export
         Route::prefix('statistik')->name('statistik.')->group(function () {
             Route::get('/', [StatistikController::class, 'index'])->name('index');
@@ -300,7 +294,7 @@ Route::prefix('penjual')->name('penjual.')->group(function () {
             Route::get('/export-excel', [StatistikController::class, 'exportExcel'])->name('export.excel');
             Route::get('/export-image', [StatistikController::class, 'exportImage'])->name('export.image');
         });
-        
+
         // 🆘 Bantuan & FAQ
         Route::get('/bantuan', [BantuanController::class, 'index'])->name('bantuan');
     });

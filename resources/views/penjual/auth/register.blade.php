@@ -1,12 +1,17 @@
 <!DOCTYPE html>
+<!-- resources/views/penjual/auth/register.blade.php -->
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Daftar Penjual | GiftKita</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ asset('images/GiftKita.png') }}">
+    
+    <!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="min-h-screen relative overflow-hidden">
     <!-- Animated Background -->
@@ -22,10 +27,10 @@
     </div>
 
     <!-- Main Container -->
-    <div class="min-h-screen flex items-center justify-center p-4">
+    <div class="min-h-screen flex items-center justify-center p-4 py-8">
         <div class="w-full max-w-5xl">
             <!-- Back Button -->
-            <a href="/penjual/login" class="inline-flex items-center gap-2 text-white mb-6 hover:gap-3 transition-all duration-300 group">
+            <a href="{{ route('penjual.login') }}" class="inline-flex items-center gap-2 text-white mb-6 hover:gap-3 transition-all duration-300 group">
                 <svg class="w-5 h-5 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -36,21 +41,21 @@
             <div class="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden">
                 <div class="grid md:grid-cols-2 gap-0">
                     <!-- Left Side - Illustration -->
-                    <div class="hidden md:flex bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-12 items-center justify-center relative overflow-hidden">
+                    <div class="hidden md:flex bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-8 lg:p-12 items-center justify-center relative overflow-hidden">
                         <div class="absolute inset-0 opacity-10">
                             <div class="floating-shape"></div>
                             <div class="floating-shape"></div>
                             <div class="floating-shape"></div>
                         </div>
                         <div class="relative z-10 text-white text-center">
-                            <div class="w-32 h-32 mx-auto mb-6 relative">
+                            <div class="w-24 h-24 lg:w-32 lg:h-32 mx-auto mb-6 relative">
                                 <div class="absolute inset-0 bg-white/20 rounded-full animate-ping"></div>
                                 <div class="relative bg-white/30 backdrop-blur-md rounded-full w-full h-full flex items-center justify-center">
-                                    <i class="fas fa-store text-6xl"></i>
+                                    <i class="fas fa-store text-4xl lg:text-6xl"></i>
                                 </div>
                             </div>
-                            <h2 class="text-3xl font-bold mb-4">Bergabung dengan GiftKita</h2>
-                            <p class="text-white/90 leading-relaxed">
+                            <h2 class="text-2xl lg:text-3xl font-bold mb-4">Bergabung dengan GiftKita</h2>
+                            <p class="text-white/90 leading-relaxed text-sm lg:text-base">
                                 Mulai berjualan dan raih kesuksesan bersama ribuan penjual lainnya di platform terpercaya
                             </p>
                             <div class="mt-8 space-y-3">
@@ -71,7 +76,7 @@
                     </div>
 
                     <!-- Right Side - Form -->
-                    <div class="p-6 md:p-8 max-h-screen overflow-y-auto">
+                    <div class="p-6 md:p-8 max-h-[85vh] md:max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <!-- Header -->
                         <div class="text-center mb-6">
                             <h1 class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
@@ -80,8 +85,37 @@
                             <p class="text-sm text-gray-600">Isi data di bawah untuk mendaftar</p>
                         </div>
 
+                        <!-- Success Alert -->
+                        @if(session('success'))
+                        <div class="mb-4 p-3 md:p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg animate-fade-in">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-check-circle mt-0.5"></i>
+                                <span class="text-sm">{{ session('success') }}</span>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Error Alert -->
+                        @if($errors->any())
+                        <div class="mb-4 p-3 md:p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg animate-fade-in">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-exclamation-circle text-lg mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-sm">Terjadi Kesalahan:</p>
+                                    <ul class="mt-1 text-xs space-y-1">
+                                        @foreach($errors->all() as $error)
+                                            <li>• {{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Form -->
-                        <form action="/penjual/register" method="POST" class="space-y-4">
+                        <form action="{{ route('penjual.register.post') }}" method="POST" class="space-y-4">
+                            @csrf
+                            
                             <!-- Grid 2 Kolom -->
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <!-- Username -->
@@ -90,9 +124,12 @@
                                         <i class="fas fa-user text-blue-500 mr-1.5"></i>
                                         Nama Pengguna
                                     </label>
-                                    <input type="text" name="username" required
-                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 outline-none text-sm"
+                                    <input type="text" name="username" required value="{{ old('username') }}"
+                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all duration-300 outline-none text-sm @error('username') border-red-500 @enderror"
                                         placeholder="Username">
+                                    @error('username')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <!-- Email -->
@@ -101,9 +138,12 @@
                                         <i class="fas fa-envelope text-purple-500 mr-1.5"></i>
                                         Email
                                     </label>
-                                    <input type="email" name="email" required
-                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 outline-none text-sm"
+                                    <input type="email" name="email" required value="{{ old('email') }}"
+                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all duration-300 outline-none text-sm @error('email') border-red-500 @enderror"
                                         placeholder="email@example.com">
+                                    @error('email')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <!-- Phone -->
@@ -112,9 +152,12 @@
                                         <i class="fas fa-phone text-green-500 mr-1.5"></i>
                                         No. HP
                                     </label>
-                                    <input type="tel" name="no_hp" required
-                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 outline-none text-sm"
+                                    <input type="tel" name="no_hp" required value="{{ old('no_hp') }}"
+                                        class="w-full px-3 py-2.5 border-2 border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all duration-300 outline-none text-sm @error('no_hp') border-red-500 @enderror"
                                         placeholder="08xxxxxxxxxx">
+                                    @error('no_hp')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <!-- Password with Eye Animation -->
@@ -125,7 +168,7 @@
                                     </label>
                                     <div class="relative">
                                         <input type="password" id="password" name="password" required
-                                            class="w-full px-3 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300 outline-none text-sm"
+                                            class="w-full px-3 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all duration-300 outline-none text-sm @error('password') border-red-500 @enderror"
                                             placeholder="Min. 6 karakter">
                                         <button type="button" id="togglePassword" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                             <div class="eye-container">
@@ -139,6 +182,9 @@
                                             </div>
                                         </button>
                                     </div>
+                                    @error('password')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
 
                                 <!-- Confirm Password -->
@@ -149,7 +195,7 @@
                                     </label>
                                     <div class="relative">
                                         <input type="password" id="password_confirmation" name="password_confirmation" required
-                                            class="w-full px-3 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 outline-none text-sm"
+                                            class="w-full px-3 py-2.5 pr-10 border-2 border-gray-200 rounded-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all duration-300 outline-none text-sm @error('password_confirmation') border-red-500 @enderror"
                                             placeholder="Ketik ulang password">
                                         <button type="button" id="togglePasswordConfirm" class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                             <div class="eye-container">
@@ -163,7 +209,18 @@
                                             </div>
                                         </button>
                                     </div>
+                                    @error('password_confirmation')
+                                        <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                    @enderror
                                 </div>
+                            </div>
+
+                            <!-- reCAPTCHA -->
+                            <div class="form-group">
+                                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                @error('g-recaptcha-response')
+                                    <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Submit Button -->
@@ -182,7 +239,7 @@
                             </div>
 
                             <!-- Google Login -->
-                            <a href="/penjual/google/redirect" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
+                            <a href="{{ route('penjual.google.redirect') }}" class="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-semibold py-2.5 rounded-lg hover:shadow-lg transition-all duration-300 text-sm">
                                 <svg class="w-5 h-5" viewBox="0 0 24 24">
                                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -195,7 +252,7 @@
                             <!-- Login Link -->
                             <p class="text-center text-gray-600 text-xs mt-4">
                                 Sudah punya akun?
-                                <a href="/penjual/login" class="text-purple-600 font-semibold hover:text-purple-700 hover:underline transition">
+                                <a href="{{ route('penjual.login') }}" class="text-purple-600 font-semibold hover:text-purple-700 hover:underline transition">
                                     Login di sini
                                 </a>
                             </p>
@@ -207,6 +264,25 @@
     </div>
 
     <style>
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
         /* Animated Background Bubbles */
         .bubble {
             position: absolute;
@@ -310,6 +386,22 @@
             }
         }
 
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
         /* Eye Animation Styles */
         .eye-container {
             width: 24px;
@@ -402,12 +494,9 @@
                 input.type = isPassword ? 'text' : 'password';
                 
                 if (isPassword) {
-                    // Open eye
                     eye.classList.add('closed');
                 } else {
-                    // Close eye
                     eye.classList.remove('closed');
-                    
                 }
             });
         }

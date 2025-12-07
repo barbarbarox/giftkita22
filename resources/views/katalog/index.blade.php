@@ -176,6 +176,25 @@
                     @php
                         $thumbnail = $produk->files->first();
                         $imagePath = $thumbnail ? asset('storage/'.$thumbnail->filepath) : asset('images/no-image.jpg');
+                        
+                        // Cek apakah file adalah video
+                        $isVideo = false;
+                        $videoType = '';
+                        if ($thumbnail) {
+                            $extension = strtolower(pathinfo($thumbnail->filepath, PATHINFO_EXTENSION));
+                            $videoExtensions = ['mp4', 'webm', 'ogg', 'mov'];
+                            if (in_array($extension, $videoExtensions)) {
+                                $isVideo = true;
+                                // Map extension ke MIME type
+                                $mimeTypes = [
+                                    'mp4' => 'video/mp4',
+                                    'webm' => 'video/webm',
+                                    'ogg' => 'video/ogg',
+                                    'mov' => 'video/mp4'
+                                ];
+                                $videoType = $mimeTypes[$extension] ?? 'video/mp4';
+                            }
+                        }
                     @endphp
                     
                     <a href="{{ route('katalog.show', $produk->id) }}"
@@ -183,23 +202,46 @@
                        data-aos="zoom-in"
                        data-aos-delay="{{ $loop->index * 50 }}">
                         
-                        {{-- Product Image --}}
+                        {{-- Product Image/Video --}}
                         <div class="relative overflow-hidden product-image">
-                            <img src="{{ $imagePath }}" 
-                                 alt="{{ $produk->nama }}"
-                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                 loading="lazy">
+                            @if($isVideo)
+                                {{-- Video Preview --}}
+                                <video class="product-video w-full h-full object-cover" 
+                                       muted 
+                                       loop
+                                       preload="metadata"
+                                       data-src="{{ $imagePath }}"
+                                       playsinline>
+                                    <source src="{{ $imagePath }}#t=0,3" type="{{ $videoType }}">
+                                    Your browser does not support the video tag.
+                                </video>
+                                
+                                {{-- Video Play Icon Overlay --}}
+                                <div class="video-overlay absolute inset-0 bg-black/30 flex items-center justify-center pointer-events-none transition-opacity duration-300">
+                                    <div class="bg-white/90 backdrop-blur-sm rounded-full p-3 md:p-4">
+                                        <i class="fas fa-play text-blue-600 text-xl md:text-2xl"></i>
+                                    </div>
+                                </div>
+                            @else
+                                {{-- Static Image --}}
+                                <img src="{{ $imagePath }}" 
+                                     alt="{{ $produk->nama }}"
+                                     class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                     loading="lazy">
+                            @endif
                             
                             {{-- Category Badge --}}
                             @if($produk->kategori)
-                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold text-purple-600 flex items-center gap-1">
+                            <div class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-semibold text-purple-600 flex items-center gap-1 z-10">
                                 <i class="fas fa-tag text-xs"></i>
                                 {{ $produk->kategori->nama_kategori }}
                             </div>
                             @endif
                             
+                           
+                            
                             {{-- Quick View Icon --}}
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <div class="quick-view-overlay absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                                 <span class="bg-white text-gray-800 px-3 py-1.5 md:px-4 md:py-2 rounded-full font-semibold text-xs md:text-sm">
                                     <i class="fas fa-eye mr-1 md:mr-2"></i>Lihat Detail
                                 </span>
@@ -250,6 +292,26 @@ html {
 .product-image {
     aspect-ratio: 1 / 1;
     width: 100%;
+    position: relative;
+}
+
+/* Video Specific Styles */
+.product-video {
+    transition: transform 0.7s ease;
+}
+
+.product-card:hover .product-video {
+    transform: scale(1.1);
+}
+
+/* Hide video overlay on hover */
+.product-card:hover .video-overlay {
+    opacity: 0;
+}
+
+/* Ensure quick view overlay appears above video overlay */
+.quick-view-overlay {
+    z-index: 20;
 }
 
 /* AOS Animation */
@@ -397,7 +459,73 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // View Toggle
+    // ═══════════════════════════════════════════════════════════
+    // 🎬 VIDEO PREVIEW HANDLER
+    // ═══════════════════════════════════════════════════════════
+    
+    const videos = document.querySelectorAll('.product-video');
+    let hoverTimeout = null;
+    
+    videos.forEach(video => {
+        const card = video.closest('.product-card');
+        
+        // Load video source on first interaction
+        const loadVideo = () => {
+            if (!video.src && video.dataset.src) {
+                video.src = video.dataset.src;
+                video.load();
+            }
+        };
+        
+        // Mouse Enter - Start playing after delay
+        card.addEventListener('mouseenter', () => {
+            loadVideo();
+            
+            // Small delay before playing for better UX
+            hoverTimeout = setTimeout(() => {
+                video.currentTime = 0; // Start from beginning
+                video.play().catch(err => {
+                    console.log('Video autoplay prevented:', err);
+                });
+            }, 200);
+        });
+        
+        // Mouse Leave - Stop and reset
+        card.addEventListener('mouseleave', () => {
+            clearTimeout(hoverTimeout);
+            video.pause();
+            video.currentTime = 0;
+        });
+        
+        // Handle video end - loop back to start if still hovering
+        video.addEventListener('ended', () => {
+            if (card.matches(':hover')) {
+                video.currentTime = 0;
+                video.play().catch(err => console.log('Loop prevented:', err));
+            }
+        });
+        
+        // Prevent click on video from navigating (optional)
+        video.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+    });
+    
+    // Pause all videos when page visibility changes
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            videos.forEach(video => {
+                video.pause();
+                video.currentTime = 0;
+            });
+        }
+    });
+
+    // ═══════════════════════════════════════════════════════════
+    // 📱 VIEW TOGGLE (Grid/List)
+    // ═══════════════════════════════════════════════════════════
+    
     const gridView = document.getElementById('gridView');
     const listView = document.getElementById('listView');
     const container = document.getElementById('productsContainer');
@@ -439,6 +567,10 @@ document.addEventListener('DOMContentLoaded', () => {
         container.className = 'list-view';
     }
 
+    // ═══════════════════════════════════════════════════════════
+    // ⚡ AUTO-SUBMIT & OPTIMIZATION
+    // ═══════════════════════════════════════════════════════════
+    
     // Auto-submit on select change (Desktop only)
     if (window.innerWidth >= 768) {
         document.querySelectorAll('select[name="kategori"], select[name="sort"]').forEach(select => {
@@ -465,6 +597,30 @@ document.addEventListener('DOMContentLoaded', () => {
             imageObserver.observe(img);
         });
     }
+    
+    // ═══════════════════════════════════════════════════════════
+    // 🎯 PERFORMANCE: Intersection Observer for Videos
+    // ═══════════════════════════════════════════════════════════
+    
+    // Only load video sources when they're near viewport
+    const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const video = entry.target;
+                if (!video.src && video.dataset.src) {
+                    // Preload metadata only when near viewport
+                    video.src = video.dataset.src;
+                    video.load();
+                }
+            }
+        });
+    }, {
+        rootMargin: '50px' // Load slightly before entering viewport
+    });
+    
+    videos.forEach(video => {
+        videoObserver.observe(video);
+    });
 });
 </script>
 @endsection

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- resources/views/admin/auth/login.blade.php -->
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -8,6 +9,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" type="image/png" href="{{ asset('images/GiftKita.png') }}">
+    
+    <!-- Google reCAPTCHA v2 -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 <body class="min-h-screen relative overflow-hidden">
     <!-- Animated Background -->
@@ -84,29 +88,62 @@
                             <p class="text-gray-600">Masuk ke GiftKita Admin Panel</p>
                         </div>
 
+                        <!-- Success Alert -->
+                        @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700 rounded-lg animate-fade-in">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-check-circle mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="font-semibold text-sm">Berhasil!</p>
+                                    <p class="text-xs mt-1">{{ session('success') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        <!-- Status Alert -->
+                        @if(session('status'))
+                        <div class="mb-4 p-4 bg-blue-50 border-l-4 border-blue-500 text-blue-700 rounded-lg animate-fade-in">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-info-circle mt-0.5"></i>
+                                <div class="flex-1">
+                                    <p class="text-sm">{{ session('status') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <!-- Error Alert -->
-                        <div id="error-alert" class="hidden mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg">
+                        @if($errors->any())
+                        <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg animate-fade-in">
                             <div class="flex items-start gap-3">
                                 <i class="fas fa-exclamation-circle mt-0.5"></i>
                                 <div class="flex-1">
                                     <p class="font-semibold text-sm">Login Gagal</p>
-                                    <p class="text-xs mt-1">Email atau password salah. Silakan coba lagi.</p>
+                                    @foreach($errors->all() as $error)
+                                        <p class="text-xs mt-1">{{ $error }}</p>
+                                    @endforeach
                                 </div>
                             </div>
                         </div>
+                        @endif
 
                         <!-- Form -->
                         <form method="POST" action="{{ route('admin.login.post') }}" class="space-y-5">
                             @csrf
+                            
                             <!-- Email -->
                             <div class="form-group">
                                 <label class="block text-gray-700 font-semibold mb-2">
                                     <i class="fas fa-envelope text-indigo-500 mr-2"></i>
                                     Email Admin
                                 </label>
-                                <input type="email" name="email" required
-                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 outline-none"
+                                <input type="email" name="email" required value="{{ old('email') }}"
+                                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 outline-none @error('email') border-red-500 @enderror"
                                     placeholder="admin@giftkita.com">
+                                @error('email')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Password with Eye Animation -->
@@ -117,7 +154,7 @@
                                 </label>
                                 <div class="relative">
                                     <input type="password" id="password" name="password" required
-                                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 outline-none"
+                                        class="w-full px-4 py-3 pr-12 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 outline-none @error('password') border-red-500 @enderror"
                                         placeholder="••••••••">
                                     <button type="button" id="togglePassword" class="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:bg-gray-100 rounded-lg transition-all duration-300">
                                         <div class="eye-container">
@@ -131,6 +168,9 @@
                                         </div>
                                     </button>
                                 </div>
+                                @error('password')
+                                    <p class="text-red-500 text-xs mt-1">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Remember Me -->
@@ -139,6 +179,14 @@
                                     <input type="checkbox" name="remember" class="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 focus:ring-2 cursor-pointer">
                                     <span class="text-gray-600 group-hover:text-gray-800 transition">Ingat Saya</span>
                                 </label>
+                            </div>
+
+                            <!-- reCAPTCHA -->
+                            <div class="form-group">
+                                <div class="g-recaptcha" data-sitekey="{{ config('services.recaptcha.site_key') }}"></div>
+                                @error('g-recaptcha-response')
+                                    <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
+                                @enderror
                             </div>
 
                             <!-- Submit Button -->
@@ -276,6 +324,22 @@
             }
         }
 
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+
         /* Eye Animation Styles */
         .eye-container {
             width: 24px;
@@ -372,7 +436,6 @@
             } else {
                 // Close eye
                 eye.classList.remove('closed');
-                
             }
         });
 
