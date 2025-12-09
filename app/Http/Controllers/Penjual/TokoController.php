@@ -1,5 +1,5 @@
 <?php
-
+// app/Http/Controllers/Penjual/TokoController.php
 namespace App\Http\Controllers\Penjual;
 
 use App\Http\Controllers\Controller;
